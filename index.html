@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartTech</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+  </head>
+  <style>
+    body {
+      margin: 0px;
+      padding: 0px;
+      font-family: Arial, sans-serif;
+    }
+    #pad {
+      height: 60px;
+      width: 100%;
+      background-color: black;
+      display: flex;
+    }
+    #pad .pad-1 {
+      display: flex;
+      align-items: center;
+    }
+    #pad p{
+      font-size: 13px;
+      color:white;
+      
+    }
+    #pad .pad-2 {
+      color: white;
+      font-size: 13px;
+      display: flex;
+      gap: 25px;
+      margin-left: auto;
+      align-items: center;
+      padding-right: 15px;
+    }
+    #pad .pad-2 li {
+      list-style-type: none;
+      cursor: pointer;
+    }
+    #pad .pad-2 li:hover{
+      text-decoration: underline;
+      background-color: #528748;
+    }
+    .content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px;
+    }
+    .content input[type="search"] {
+      padding: 5px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .content input[type="button"] {
+      padding: 5px 10px;
+      font-size: 16px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    p {
+      color: rgba(5, 5, 17, 0.849);
+      padding: 5px;
+      font-size: 40px;
+      font-weight: bold;
+      margin-bottom: 0px;
+      margin-top: 0px;
+      margin-left: 15px;
+    }
+    .content .inner{
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      margin-right: 15px;
+    }
+    .navbar {
+      height: 100%;
+      width: 100%;
+      display: flex;
+      background-color: #333;
+      padding: 10px;
+      justify-content:space-evenly;
+    }
+    .navbar a {
+      text-decoration: none;
+      color: thistle;
+      padding: 14px 20px;
+      transition: background-color 0.3s ease;
+    }
+    .navbar a:hover {
+      background-color: #ddd;
+      color: black;
+    }
+    .active {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      background-color: #f1f1f1;
+      padding: 10px;
+      font-size: 14px;
+       
+      box-shadow: 0 2px 4px rgba(128, 27, 27, 0.1);
+    }
+    .active .options{
+      list-style-type: none;
+      display: flex;
+      padding-left: 5px;
+      gap: 20px;
+      
+    }      
+    .active .options li{
+      padding: 10px 15px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      border-radius: 5px;
+    }
+    .options li:hover {
+      background-color: #ddd;
+    }
+    .images {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      padding: 10px;
+      background-color: white;
+    }
+      .images img {
+        width: 500px;
+        height: 100%;
+        border-radius: 10px;
+      }
+      .images p{
+        text-align: center;
+      }
+      .images #p-2{
+        font-size: 40px;
+        font-weight: bold;
+        font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+        color: rgba(64, 64, 73, 0.849);
+      }
+      .images #p-3{
+        font-size: 28px;
+        color: rgba(69, 69, 126, 0.849);
+      }
+      .images #p-4{
+        font-size: 24px;
+        color: rgba(129, 148, 138, 0.849);
+      }
+      .images button{
+        padding: 10px 10px;
+        font-size: 18px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+       .images button:hover{
+        background-color: #45a049;
+        color: white;
+      }
+      footer{
+        background-color: #333;
+        color: white;
+        display: flex;
+        flex-direction: column; 
+        align-items: center;
+        padding: 20px;
+      }
+      footer .interact{
+        display: flex;
+        flex-direction: column; 
+        align-items: center;
+        gap: 10px;
+      }
+      footer .interact #p-5{
+        font-size: 28px;
+        font-weight: bold;
+        text-transform: capitalize;
+        color: white;
+      }
+      footer .interact #p-6{
+        font-size: 22px;
+        text-align: center;
+        max-width: 400px;
+        color: white;
+      }
+      footer .interact label{
+        font-size: 20px;
+        color: white;
+
+      }
+      footer .interact .email-1{
+        display:flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        
+      }
+      footer .interact .email-1 input[type="email"]{
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        width: 500px;
+      }
+      footer .interact .email-1 input[type="checkbox"]{
+        margin-right: 10px;
+        max-height: fit-content;
+      }
+      footer .interact .email-1 button{
+        padding: 10px 20px;
+        font-size: 16px;
+        text-transform: uppercase;
+        background-color: #333;
+        color: white;
+        border: 1px solid white;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 500px;
+      }
+       footer .interact .email-1 button:hover{
+        background-color: #45a049;
+        color: white;
+      }
+  </style>
+  <body>
+    <div id="pad">
+      <div class="pad-1">
+      <i class="fa-solid fa-truck-fast" style="font-size:24px; color:#444;"></i>
+       <p>Free shipping on orders over ₹399</p>
+       </div>
+       <div class="pad-2">
+        <li>About</li>
+        <li>Contact</li>
+        <li>Help Center</li>
+        <li>Call Us 123-456-7890</li>
+       </div>
+    </div>
+
+    <div class="content">
+      <p>SmartTech</p>
+      
+      <div class="inner">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input
+          type="search"
+          name=""
+          id="search"
+          placeholder="Search for product"
+        />
+        <i class="fa-solid fa-user"></i>
+        <input type="button" value="Log in" />
+        <i class="fa fa-heart"></i>
+        <i class="fa fa-shopping-cart"></i>
+      </div>
+
+    </div>
+
+    <header>
+      <div class="navbar">
+        <a href="#home">Home</a>
+        <a href="#products">Products</a>
+        <a href="#about">About Us</a>
+        <a href="#contact">Contact Us</a>
+      </div>
+      <div class="active">
+        <div class="options">
+          <li>Mobiles</li>
+          <li>Tablets</li>
+          <li>Audio</li>
+          <li>TV & Home Cinema</li>
+          <li>Watches</li>
+          <li>Drones & Cameras</li>
+          <li>Gaming</li>
+          <li>Sale</li>
+          <li>More</li>
+        </div>
+      </div>
+    </header>
+    </div>
+    <div class="images">
+      <p id="p-2"> iphone 17 Pro</p>
+      <p id="p-3">Heat‑forged aluminium unibody design for exceptional pro capability.</p>
+      <img src="The iPhone 17 Pro will reportedly be available in a new Sky Blue color 👀.jpg" alt="Iphone 17 Pro" srcset="">
+      <button type="button">Buy Now</button>
+      <p id="p-4">From ₹134900.00 or ₹21650.00/mo. for 6mo.</p>
+    </div>
+    <footer>
+      <div class="interact">
+        <p id="p-5">Join Our Mailing List</p>
+        <p id="p-6">And never miss out on exclusive offers, product launches, and updates from SmartTech.</p>
+        <div class="email-1">
+          <label for="email-input">Enter your email*</label>
+          <input type="email" id="email-input" placeholder="Your email address">
+          <input type="checkbox" id="consent-checkbox">
+          <label for="consent-checkbox">I agree to receive promotional emails from SmartTech.*</label> 
+          <button type="button">Subscribe Now</button>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
