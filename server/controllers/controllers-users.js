@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import { sendVerificationEmail, generateVerificationToken } from "../utils/emailService.js";
 
 //ACCESS TOKEN
-function generateAccessToken(user) {
+export function generateAccessToken(user) {
   return jwt.sign(
     {
       userId: user._id,
@@ -19,7 +19,7 @@ function generateAccessToken(user) {
 }
 
 //REFRESH TOKEN
-function generateRefreshToken(user) {
+export function generateRefreshToken(user) {
   return jwt.sign(
     {
       userId: user._id,

@@ -1,7 +1,8 @@
 import express from "express";
 import cors from "cors";
-
 import dotenv from "dotenv";
+dotenv.config();
+
 import Product from "./models/product.js";
 import Category from "./models/category.js";
 import Order from "./models/order.js";
@@ -11,7 +12,6 @@ import verifyAccessToken, { isAdmin } from "./middleware/authmiddleware.js";
 import { handlePaymentWebhook } from "./controllers/paymentController.js";
 
 
-dotenv.config();
 const app = express();
 app.use(cors({
   origin:"http://localhost:5173",
