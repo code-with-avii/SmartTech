@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from "../Utils/config.js";
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -44,7 +45,7 @@ const ResetPassword = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:3000/api/email/reset-password',
+        `${API_URL}/api/email/reset-password`,
         { token, newPassword }
       );
 

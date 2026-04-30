@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux";
 import { addToCart } from "../Store/cartSlice.js";
 import React from "react";
 import QuickView from "./QuickView";
+import { API_URL } from "../Utils/config.js";
 
 const Contents = () => {
   const [products, setProducts] = useState([]);
@@ -25,7 +26,7 @@ const Contents = () => {
 
   const fetchProducts = () => {
     axios
-      .get("http://localhost:3000/products")
+      .get(`${API_URL}/products`)
       .then((response) => {
         setProducts(response.data);
       })

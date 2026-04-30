@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { login } from "../Store/userSlice";
+import { API_URL } from "../Utils/config.js";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -15,7 +16,7 @@ const Login = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:3000/api/auth/login",
+        `${API_URL}/api/auth/login`,
         { email, password },
         { withCredentials: true },
       );
@@ -118,7 +119,7 @@ const Login = () => {
         </button>
         <button
           onClick={() => {
-            window.location.href = "http://localhost:5000/auth/google";
+            window.location.href = `${API_URL}/api/auth/google`;
           }}
           className="bg-red-500 text-white px-4 py-2 rounded"
         >

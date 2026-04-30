@@ -6,17 +6,34 @@ export async function googleAssignToken(req, res) {
       return res.status(401).json({ message: "Authentication failed" });
     }
 
-    const { googleId, email, id, role } = req.user;
-    const user = {
-      userId: id,
-      email: email,
-      role: role,
-    };
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
+    const accessToken = generateAccessToken(req.user);
+    const refreshToken = generateRefreshToken(req.user);
 
+    req.user.refreshToken = refreshToken;
+    await req.user.save();
+
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      expiresIn: 15 * 60 * 1000,
+    });
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      expiresIn: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    const userPayload = {
+      email: req.user.email,
+      name: req.user.name,
+      role: req.user.role,
+    };
+
+    const frontendUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/google-callback` : "http://localhost:5173/google-callback";
     res.redirect(
-      `smarttech://auth?access_token=${token.access_token}&refresh_token=${token.refresh_token}`,
+      `${frontendUrl}?accessToken=${accessToken}&user=${encodeURIComponent(JSON.stringify(userPayload))}`
     );
   } catch (e) {
     return res.status(500).json({

@@ -3,6 +3,7 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import { API_URL } from "../Utils/config.js";
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const user = useSelector((state) => state.user);
@@ -44,7 +45,7 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:3000/api/admin/stats",
+        `${API_URL}/api/admin/stats`,
         apiOptions,
       );
       setStats(res.data);
@@ -55,7 +56,7 @@ const AdminDashboard = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/products");
+      const res = await axios.get(`${API_URL}/products`);
       setProducts(res.data);
     } catch (err) {
       console.error(err);
@@ -65,7 +66,7 @@ const AdminDashboard = () => {
   const fetchCategories = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:3000/categories",
+        `${API_URL}/categories`,
         apiOptions,
       );
       setCategories(res.data);
@@ -79,7 +80,7 @@ const AdminDashboard = () => {
     e.preventDefault();
     try {
       await axios.post(
-        "http://localhost:3000/categories",
+        `${API_URL}/categories`,
         { name: newCatName },
         apiOptions,
       );
@@ -93,7 +94,7 @@ const AdminDashboard = () => {
   const handleDeleteCategory = async (id) => {
     if (!window.confirm("Delete category?")) return;
     try {
-      await axios.delete(`http://localhost:3000/categories/${id}`, apiOptions);
+      await axios.delete(`${API_URL}/categories/${id}`, apiOptions);
       fetchCategories();
     } catch (err) {
       alert("Failed to delete category");
@@ -130,14 +131,14 @@ const AdminDashboard = () => {
     try {
       if (editingProduct) {
         await axios.put(
-          `http://localhost:3000/products/${editingProduct._id}`,
+          `${API_URL}/products/${editingProduct._id}`,
           productForm,
           apiOptions,
         );
         alert("Product updated");
       } else {
         await axios.post(
-          "http://localhost:3000/products",
+          `${API_URL}/products`,
           productForm,
           apiOptions,
         );
@@ -154,7 +155,7 @@ const AdminDashboard = () => {
   const handleDeleteProduct = async (id) => {
     if (!window.confirm("Delete product?")) return;
     try {
-      await axios.delete(`http://localhost:3000/products/${id}`, apiOptions);
+      await axios.delete(`${API_URL}/products/${id}`, apiOptions);
       fetchProducts();
       if (activeTab === "dashboard") fetchStats();
     } catch (err) {

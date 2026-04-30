@@ -7,6 +7,7 @@ import { CameraHero } from "../components/HeroBanner";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import TopNavbar from "../components/TopNavbar";
+import { API_URL } from "../Utils/config.js";
 
 const CameraSection = () => {
   const [cameras, setCameras] = useState([]);
@@ -21,7 +22,7 @@ const CameraSection = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:3000/products")
+      .get(`${API_URL}/products`)
       .then((res) => {
         const cameraOnly = res.data.filter(
           (item) => item.type && item.type.toLowerCase() === "camera",

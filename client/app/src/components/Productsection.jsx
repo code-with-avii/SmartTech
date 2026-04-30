@@ -9,6 +9,7 @@ import LazyImage from "./LazyImage";
 import MobileFilterPanel from "./MobileFilterPanel";
 import ToastNotification from "./ToastNotification";
 import { FaHeart } from 'react-icons/fa';
+import { API_URL } from "../Utils/config.js";
 
 const ProductSection = ({ type, title }) => {
   const [products, setProducts] = useState([]);
@@ -26,7 +27,7 @@ const ProductSection = ({ type, title }) => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:3000/products")
+      .get(`${API_URL}/products`)
       .then((res) => {
         const filteredType = res.data.filter(
           (item) =>

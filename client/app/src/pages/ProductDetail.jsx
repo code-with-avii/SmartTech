@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar';
 import TopNavbar from '../components/TopNavbar';
 import Footer from '../components/Footer';
 import { ProductCardSkeleton } from '../components/LoadingSkeleton';
+import { API_URL } from "../Utils/config.js";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -25,7 +26,7 @@ const ProductDetail = () => {
   const fetchProduct = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:3000/products/${id}`);
+      const response = await fetch(`${API_URL}/products/${id}`);
       if (!response.ok) {
         throw new Error('Product not found');
       }

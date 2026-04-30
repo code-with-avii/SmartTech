@@ -20,6 +20,7 @@ import AdminDashboard from "./pages/AdminDashboard.jsx"
 import ProductDetail from "./pages/ProductDetail.jsx"
 import Wishlist from "./pages/Wishlist.jsx"
 import RazorpayPayment from "./pages/RazorpayPayment.jsx";
+import GoogleCallback from "./pages/GoogleCallback.jsx";
 
 function App() {
   const dispatch = useDispatch();
@@ -39,6 +40,7 @@ function App() {
       {/* <Home/> */}
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/google-callback" element={<GoogleCallback />} />
         <Route path="/Login" element={<Login />} />
         <Route path="/help" element={<Helpcenter />} />
         <Route path="/cart" element={<Cart />} />

@@ -14,8 +14,8 @@ import { handlePaymentWebhook } from "./controllers/paymentController.js";
 
 const app = express();
 app.use(cors({
-  origin:"http://localhost:5173",
-  credentials:true,
+  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  credentials: true,
 }));
 
 app.post("/api/payments/webhook", express.raw({ type: "application/json" }), handlePaymentWebhook);
@@ -105,7 +105,7 @@ app.get("/api/admin/stats", verifyAccessToken, isAdmin, async (req, res) => {
     const userCount = await User.countDocuments();
     const productCount = await Product.countDocuments();
     const orderCount = await Order.countDocuments();
-    
+
     // Calculate total revenue from Orders
     const revenueResult = await Order.aggregate([
       { $group: { _id: null, total: { $sum: "$totalAmount" } } }

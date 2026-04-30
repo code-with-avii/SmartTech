@@ -3,9 +3,10 @@ import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { clearCart } from "../Store/cartSlice";
+import { API_URL } from "../Utils/config.js";
 
-const API_BASE_URL = "http://localhost:3000/api/payments";
-const AUTH_BASE_URL = "http://localhost:3000/api/auth";
+const API_BASE_URL = `${API_URL}/api/payments`;
+const AUTH_BASE_URL = `${API_URL}/api/auth`;
 const LOGIN_ROUTE = "/login";
 
 const loadRazorpayScript = () =>
