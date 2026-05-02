@@ -19,7 +19,7 @@ if (process.env.NODE_ENV !== "production") {
   connectDB()
     .then(() =>
       app.listen(port, () => {
-        console.log(`server running on port ${PORT}`);
+        console.log(`server running on port ${port}`);
       }),
     )
     .catch((err) => {
