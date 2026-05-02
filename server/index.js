@@ -13,12 +13,12 @@ app.use("/api/auth", authrouter);
 app.use("/api/email", emailRoutes);
 app.use("/api/payments", paymentRouter);
 
-const PORT = process.env.PORT || 5000;
+const port = process.env.PORT || 5000;
 
 if (process.env.NODE_ENV !== "production") {
   connectDB()
     .then(() =>
-      app.listen(PORT, () => {
+      app.listen(port, () => {
         console.log(`server running on port ${PORT}`);
       }),
     )
