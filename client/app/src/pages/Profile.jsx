@@ -2,7 +2,8 @@ import React from "react";
 import Navbar from "../components/Navbar";
 import { FaSignOutAlt } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
-import { Logout } from "../Store/userSlice";
+import LogoutUser from "../components/LogoutUser.jsx";
+import Logout  from "../Store/userSlice.js";
 import { Link } from "react-router";
 import Footer from "../components/Footer.jsx";
 import VerificationStatus from "../components/VerificationStatus.jsx";
@@ -80,8 +81,6 @@ const Profile = () => {
               <button
                 onClick={async () => {
                   alert("logged out");
-                  const LogoutUser = (await import("../components/LogoutUser"))
-                    .default;
                   await LogoutUser();
                   dispatch(Logout());
                 }}

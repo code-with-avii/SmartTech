@@ -1,8 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import LogoutUser from "./LogoutUser";
-import { Logout } from "../Store/userSlice";
+import LogoutUser from "../components/LogoutUser.jsx";
+import { Logout } from "../Store/userSlice.js";
 import { FaShoppingCart, FaUser, FaHeart } from 'react-icons/fa';
 
 const Navbar = () => {
