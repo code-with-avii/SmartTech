@@ -14,7 +14,18 @@ import { handlePaymentWebhook } from "./controllers/paymentController.js";
 
 const app = express();
 app.use(cors({
-  origin: process.env.CLIENT_URL || "https://smart-tech-o6mh0eki7-code-with-aviis-projects.vercel.app",
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      "http://localhost:5173",
+      "https://smart-tech-gold.vercel.app",
+      process.env.CLIENT_URL
+    ];
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 
