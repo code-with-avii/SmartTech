@@ -14,7 +14,7 @@ import { handlePaymentWebhook } from "./controllers/paymentController.js";
 
 const app = express();
 app.use(cors({
-  origin:"https://smart-tech-gold.vercel.app",
+  origin:"https://smart-tech-o6mh0eki7-code-with-aviis-projects.vercel.app",
   credentials: true,
 }));
 
