@@ -3,10 +3,10 @@ import { useDispatch} from "react-redux";
 import { useEffect, useState } from "react";
 import { addToCart } from "../Store/cartSlice.js";
 import { useMemo } from "react";
-import { TabletsHero } from "../components/HeroBanner";
-import Footer from "../components/Footer";
-import Navbar from "../components/Navbar";
-import TopNavbar from "../components/TopNavbar";
+import { TabletsHero } from "../components/HeroBanner.jsx";
+import Footer from "../components/Footer.jsx";
+import Navbar from "../components/Navbar.jsx";
+import TopNavbar from "../components/TopNavbar.jsx";
 import { API_URL } from "../Utils/config.js";
 
 const TabletSection = () => {

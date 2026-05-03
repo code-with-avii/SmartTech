@@ -1,11 +1,11 @@
-import Header from "../components/Header";
-import Navbar from "../components/Navbar";
+import Header from "../components/Header.jsx";
+import Navbar from "../components/Navbar.jsx";
 import Contents from "../components/Contents";
-import CategoryMenu from "../components/CategoryMenu";
-import Footer from "../components/Footer";
-import TopNavbar from "../components/TopNavbar";
+import CategoryMenu from "../components/CategoryMenu.jsx";
+import Footer from "../components/Footer.jsx";
+import TopNavbar from "../components/TopNavbar.jsx";
 import Banner from "../components/Baneer";
-import { HomeHero } from "../components/HeroBanner";
+import { HomeHero } from "../components/HeroBanner.jsx";
 
 const Home = () => {
   

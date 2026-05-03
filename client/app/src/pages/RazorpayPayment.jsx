@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { clearCart } from "../Store/cartSlice";
+import { clearCart } from "../Store/cartSlice.js";
 import { API_URL } from "../Utils/config.js";
 
 const API_BASE_URL = `${API_URL}/api/payments`;

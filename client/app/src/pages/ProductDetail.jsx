@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { addToCart } from '../Store/cartSlice.js';
-import Navbar from '../components/Navbar';
-import TopNavbar from '../components/TopNavbar';
-import Footer from '../components/Footer';
-import { ProductCardSkeleton } from '../components/LoadingSkeleton';
+import Navbar from '../components/Navbar.jsx';
+import TopNavbar from '../components/TopNavbar.jsx';
+import Footer from '../components/Footer.jsx';
+import { ProductCardSkeleton } from '../components/LoadingSkeleton.jsx';
 import { API_URL } from "../Utils/config.js";
 
 const ProductDetail = () => {
@@ -218,7 +218,7 @@ const ProductDetail = () => {
 
               <button
                 onClick={handleAddToCart}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105"
+                className="w-full bg-linear-to-r from-blue-600 to-purple-600 text-white py-4 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105"
               >
                 Add to Cart
               </button>

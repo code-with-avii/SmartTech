@@ -1,6 +1,6 @@
 import React from "react";
 import TopNavbar from "../components/TopNavbar.jsx";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 import { useSelector, useDispatch } from "react-redux";
 import {increaseQuantity,decreaseQuantity,removeFromCart,clearCart,} from "../Store/cartSlice";

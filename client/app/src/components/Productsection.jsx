@@ -3,11 +3,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState, useMemo } from "react";
 import { addToCart } from "../Store/cartSlice.js";
 import { addToWishlist, removeFromWishlist } from "../Store/wishlistSlice.js";
-import { CategoryPageSkeleton } from "./LoadingSkeleton";
+import { CategoryPageSkeleton } from "./LoadingSkeleton.jsx";
 import { Link } from 'react-router-dom';
 import LazyImage from "./LazyImage";
 import MobileFilterPanel from "./MobileFilterPanel";
-import ToastNotification from "./ToastNotification";
+import ToastNotification from "./ToastNotification.jsx";
 import { FaHeart } from 'react-icons/fa';
 import { API_URL } from "../Utils/config.js";
 

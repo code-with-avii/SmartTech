@@ -4,8 +4,8 @@ import { FaSignOutAlt } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import { Logout } from "../Store/userSlice";
 import { Link } from "react-router";
-import Footer from "../components/Footer";
-import VerificationStatus from "../components/VerificationStatus";
+import Footer from "../components/Footer.jsx";
+import VerificationStatus from "../components/VerificationStatus.jsx";
 
 const Profile = () => {
   const { name, email, isVerified } = useSelector((state) => state.user);

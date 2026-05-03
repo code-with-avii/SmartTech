@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { removeFromWishlist, clearWishlist, moveWishlistToCart } from '../Store/wishlistSlice';
-import { addToCart } from '../Store/cartSlice';
+import { removeFromWishlist, clearWishlist} from '../Store/wishlistSlice.js';
+import { addToCart } from '../Store/cartSlice.js';
 import { FaHeart, FaTrash, FaShoppingCart, FaArrowLeft } from 'react-icons/fa';
 
 const Wishlist = () => {

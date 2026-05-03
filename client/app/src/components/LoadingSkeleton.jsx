@@ -4,7 +4,7 @@ import React from 'react';
 export const ProductCardSkeleton = () => (
   <div className="bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse">
     {/* Image Skeleton */}
-    <div className="h-64 bg-gradient-to-br from-gray-200 to-gray-300"></div>
+    <div className="h-64 bg-linear-to-br from-gray-200 to-gray-300"></div>
     
     {/* Content Skeleton */}
     <div className="p-6 space-y-4">
@@ -50,7 +50,7 @@ export const ProductGridSkeleton = ({ count = 8 }) => (
 
 // Category Page Skeleton
 export const CategoryPageSkeleton = () => (
-  <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+  <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
     <div className="container mx-auto px-4 py-12">
       {/* Header Skeleton */}
       <div className="text-center mb-12">
@@ -142,7 +142,7 @@ export const CartPageSkeleton = () => (
 
 // Hero Banner Skeleton
 export const HeroBannerSkeleton = () => (
-  <div className="relative h-96 md:h-[500px] bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse rounded-lg overflow-hidden">
+  <div className="relative h-96 md:h-125 bg-linear-to-br from-gray-200 to-gray-300 animate-pulse rounded-lg overflow-hidden">
     <div className="absolute inset-0 flex items-center justify-center text-center px-4">
       <div className="space-y-4">
         <div className="h-12 bg-gray-400 rounded w-1/2 mx-auto"></div>

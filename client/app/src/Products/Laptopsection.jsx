@@ -1,8 +1,8 @@
-import ProductSection from "../components/ProductSection";
-import { LaptopsHero } from "../components/HeroBanner";
-import Footer from "../components/Footer";
-import Navbar from "../components/Navbar";
-import TopNavbar from "../components/TopNavbar";
+import ProductSection from "../components/Productsection.jsx";
+import { LaptopsHero } from "../components/HeroBanner.jsx";
+import Footer from "../components/Footer.jsx";
+import Navbar from "../components/Navbar.jsx";
+import TopNavbar from "../components/TopNavbar.jsx";
 
 const LaptopSection = () =>{
   return (
