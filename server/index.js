@@ -15,19 +15,12 @@ app.use("/api/payments", paymentRouter);
 
 const port = process.env.PORT || 5000;
 
-if (process.env.NODE_ENV !== "production") {
-  connectDB()
-    .then(() =>
-      app.listen(port, () => {
-        console.log(`server running on port ${port}`);
-      }),
-    )
-    .catch((err) => {
-      console.log(err);
+connectDB()
+  .then(() => {
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
     });
-} else {
-  // Connect to DB for Vercel serverless
-  connectDB().catch((err) => console.log(err));
-}
+  })
+  .catch((err) => console.log(err));
 
 export default app;
