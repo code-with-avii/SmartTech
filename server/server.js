@@ -14,7 +14,7 @@ import { handlePaymentWebhook } from "./controllers/paymentController.js";
 
 const app = express();
 app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  origin:"https://smart-tech-gold.vercel.app",
   credentials: true,
 }));
 
