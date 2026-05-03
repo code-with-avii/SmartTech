@@ -1,4 +1,4 @@
-import ProductSection from "../components/ProductSection.jsx";
+import ProductSection from "../components/ProductSectionTemp.jsx";
 import { MobilesHero } from "../components/HeroBanner.jsx";
 import Footer from "../components/Footer.jsx";
 import Navbar from "../components/Navbar.jsx";
