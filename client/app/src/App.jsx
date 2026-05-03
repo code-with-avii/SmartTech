@@ -48,8 +48,8 @@ function App() {
         <Route path="/signup" element={<SignUp/>}/>
         <Route path="/login" element={<Login/>}/>
         <Route path="/profile" element= {<Profile/>}/>
-        <Route path="/mobiles" element={<Mobilesection/>}/>
-        <Route path="/laptops" element={<Laptopsection/>}/>
+        <Route path="/mobiles" element={<MobileSection/>}/>
+        <Route path="/laptops" element={<LaptopSection/>}/>
         <Route path="/drones" element={<DroneSection/>}/>
         <Route path="/cameras" element={<CameraSection/>}/>
         <Route path="/tablets" element={<TabletSection/>}/>
