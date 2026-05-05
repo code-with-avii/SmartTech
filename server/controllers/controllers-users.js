@@ -84,14 +84,14 @@ async function Signup(req, res) {
     res
       .cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: true,
-        sameSite: "strict",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
         expiresIn: 15 * 60 * 1000,
       })
       .cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: true,
-        sameSite: "strict",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
         expiresIn: 7 * 24 * 60 * 60 * 1000,
       })
       .json({
@@ -126,6 +126,12 @@ async function Login(req, res) {
       });
     }
 
+    if (!user.password) {
+      return res.status(400).json({
+        message: "User password not set",
+      });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
@@ -141,14 +147,14 @@ async function Login(req, res) {
     res
       .cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: true,
-        sameSite: "strict",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
         expiresIn: 15 * 60 * 1000,
       })
       .cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: true,
-        sameSite: "strict",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
         expiresIn: 7 * 24 * 60 * 60 * 1000,
       })
       .status(200)
