@@ -11,9 +11,9 @@ export function generateAccessToken(user) {
       email: user.email,
       role: user.role,
     },
-    process.env.JWT_SECRET,
+    process.env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn:process.env.JWT_EXPIRES_IN || "7d",
+      expiresIn:process.env.JWT_EXPIRES_IN,
     },
   );
 }
@@ -86,13 +86,13 @@ async function Signup(req, res) {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-        expiresIn: 15 * 60 * 1000,
+        maxAge: 15 * 60 * 1000,
       })
       .cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-        expiresIn: 7 * 24 * 60 * 60 * 1000,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
       })
       .json({
         accessToken: accessToken,
