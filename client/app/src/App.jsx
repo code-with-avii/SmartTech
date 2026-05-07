@@ -59,6 +59,8 @@ function App() {
         <Route path = "/admin" element={<AdminDashboard/>}/>
         <Route path="/product/:id" element={<ProductDetail/>}/>
         <Route path="/razorpay-payment" element={<RazorpayPayment />} />
+        <Route path="/google-callback"
+  element={<GoogleCallback />}/>
       </Routes>
     </Router>
   );
