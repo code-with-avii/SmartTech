@@ -16,7 +16,7 @@ const app = express();
 app.use(cors({
   origin: function (origin, callback) {
     const allowedOrigins = [
-      "http://localhost:5173",
+
       "https://smart-tech-gold.vercel.app",
       process.env.CLIENT_URL
     ];
