@@ -117,13 +117,32 @@ const Login = () => {
         >
           Sign Up
         </button>
+        <div className="flex items-center my-5">
+          <div className="flex-1 h-px bg-white/20"></div>
+
+          <span className="px-3 text-sm text-gray-300">OR</span>
+
+          <div className="flex-1 h-px bg-white/20"></div>
+        </div>
         <button
           onClick={() => {
             window.location.href = `${API_URL}/api/auth/google`;
           }}
-          className="bg-red-500 text-white px-4 py-2 rounded"
+          className="
+    w-full mt-4 flex items-center justify-center gap-3
+    bg-white/10 backdrop-blur-md
+    border border-white/20
+    text-white font-medium
+    py-3 rounded-xl
+    hover:bg-white/20
+    hover:shadow-xl
+    hover:-translate-y-1
+    transition-all duration-300
+  "
         >
-          Login with Google
+          <FcGoogle className="text-2xl bg-white rounded-full p-1" />
+
+          <span>Continue with Google</span>
         </button>
       </div>
     </div>

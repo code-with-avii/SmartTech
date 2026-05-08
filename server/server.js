@@ -1,7 +1,10 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet"
+import rateLimit from "express-rate-limit"
 import dotenv from "dotenv";
 dotenv.config();
+
 
 import Product from "./models/product.js";
 import Category from "./models/category.js";
@@ -13,6 +16,7 @@ import { handlePaymentWebhook } from "./controllers/paymentController.js";
 
 
 const app = express();
+app.use(helmet())
 app.use(cors({
   origin: function (origin, callback) {
     const allowedOrigins = [
@@ -28,6 +32,12 @@ app.use(cors({
   },
   credentials: true,
 }));
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit:100,
+})
+app.use(limiter);
 
 app.post("/api/payments/webhook", express.raw({ type: "application/json" }), handlePaymentWebhook);
 app.use(express.json());
