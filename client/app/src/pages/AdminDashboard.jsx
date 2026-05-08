@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { API_URL } from "../Utils/config.js";
+import { Logout } from "../Store/userSlice.js";
+
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const user = useSelector((state) => state.user);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   // State
   const [stats, setStats] = useState(null);
@@ -25,6 +28,25 @@ const AdminDashboard = () => {
     description: "",
     category: "",
   });
+
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        `${API_URL}/api/auth/logout`,
+        {},
+        {
+          withCredentials: true,
+        },
+      );
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("user");
+
+      dispatch(logout());
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+  };
 
   useEffect(() => {
     if (!user || user.role !== "admin") {
@@ -44,10 +66,7 @@ const AdminDashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const res = await axios.get(
-        `${API_URL}/api/admin/stats`,
-        apiOptions,
-      );
+      const res = await axios.get(`${API_URL}/api/admin/stats`, apiOptions);
       setStats(res.data);
     } catch (err) {
       console.error("Error fetching stats", err);
@@ -65,10 +84,7 @@ const AdminDashboard = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await axios.get(
-        `${API_URL}/categories`,
-        apiOptions,
-      );
+      const res = await axios.get(`${API_URL}/categories`, apiOptions);
       setCategories(res.data);
     } catch (err) {
       console.error(err);
@@ -137,11 +153,7 @@ const AdminDashboard = () => {
         );
         alert("Product updated");
       } else {
-        await axios.post(
-          `${API_URL}/products`,
-          productForm,
-          apiOptions,
-        );
+        await axios.post(`${API_URL}/products`, productForm, apiOptions);
         alert("Product created");
       }
       setShowProductModal(false);
@@ -168,7 +180,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900 font-sans">
-      
       {/* Sidebar */}
       <div className="w-64 bg-linear-to-b from-gray-900 to-gray-800 text-white flex flex-col shadow-xl">
         <div className="p-6 text-2xl font-bold border-b border-gray-700 tracking-wide">
@@ -182,7 +193,7 @@ const AdminDashboard = () => {
             { name: "Categories", key: "categories", icon: "📁" },
             { name: "Users", key: "users", icon: "👤" }, // NEW
             { name: "Orders", key: "orders", icon: "🧾" },
-             // NEW
+            // NEW
           ].map((item) => (
             <button
               key={item.key}
@@ -198,9 +209,22 @@ const AdminDashboard = () => {
             </button>
           ))}
         </nav>
+        <div className="mt-auto p-4 border-t border-gray-700">
+          <button
+            onClick={handleLogout}
+            className="
+      w-full flex items-center justify-center gap-2
+      bg-red-500 hover:bg-red-600
+      text-white py-3 rounded-lg
+      font-semibold transition-all duration-300
+      hover:shadow-lg hover:scale-[1.02]
+    "
+          >
+            🚪 Logout
+          </button>
+        </div>
       </div>
-      
-      
+
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto p-8">
         {/* Dashboard Tab */}
