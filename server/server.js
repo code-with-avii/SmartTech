@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet"
 import rateLimit from "express-rate-limit"
+import mongoSanitize from "express-mongo-sanitize";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -13,6 +14,7 @@ import User from "./models/users.js";
 import cookieParser from "cookie-parser";
 import verifyAccessToken, { isAdmin } from "./middleware/authmiddleware.js";
 import { handlePaymentWebhook } from "./controllers/paymentController.js";
+import hpp from "hpp";
 
 
 const app = express();
@@ -38,7 +40,8 @@ const limiter = rateLimit({
   limit:100,
 })
 app.use(limiter);
-
+app.use(mongoSanitize)
+app.use(hpp())
 app.post("/api/payments/webhook", express.raw({ type: "application/json" }), handlePaymentWebhook);
 app.use(express.json());
 app.use(cookieParser());
