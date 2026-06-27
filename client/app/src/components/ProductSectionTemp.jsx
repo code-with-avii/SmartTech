@@ -112,13 +112,6 @@ const ProductSection = ({ type, title }) => {
             Discover our premium collection of {title.toLowerCase()} with cutting-edge technology, 
             exceptional performance, and unbeatable prices.
           </p>
-          {/* Test Button for Debugging */}
-          <button
-            onClick={() => alert('Test alert is working!')}
-            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            Test Alert
-          </button>
         </div>
       
         {/* Filters Section */}

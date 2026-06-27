@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../Store/cartSlice.js";
 import React from "react";
+import { Link } from "react-router-dom";
 import QuickView from "./QuickView";
 import { API_URL } from "../Utils/config.js";
 
@@ -97,7 +98,7 @@ const Contents = () => {
               className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden group"
             >
               {/* Product Image */}
-              <div className="relative overflow-hidden h-48 bg-gradient-to-br from-purple-50 to-pink-50">
+                <Link to={`/product/${product._id}`} className="block relative overflow-hidden h-48 bg-gradient-to-br from-purple-50 to-pink-50">
                 <img
                   src={product.image}
                   onError={(e) => {
@@ -115,20 +116,23 @@ const Contents = () => {
                 {/* Quick View */}
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
                   <button 
-                    onClick={() => handleQuickView(product)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleQuickView(product);
+                    }}
                     className="bg-white text-gray-900 px-4 py-2 rounded-lg font-semibold transform scale-0 group-hover:scale-100 transition-all duration-300"
                   >
                     Quick View
                   </button>
                 </div>
-              </div>
+                </Link>
 
               {/* Product Info */}
               <div className="p-4">
                 {/* Name */}
-                <h3 className="text-sm font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors">
+                <Link to={`/product/${product._id}`} className="text-sm font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors block">
                   {product.name}
-                </h3>
+                </Link>
 
                 {/* Rating */}
                 <div className="flex items-center gap-2 mb-3">

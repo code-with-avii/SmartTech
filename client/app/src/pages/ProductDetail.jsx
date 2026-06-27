@@ -124,7 +124,7 @@ const ProductDetail = () => {
             </button>
             <span className="text-gray-400">/</span>
             <button
-              onClick={() => navigate(`/${product.type}s`)}
+              onClick={() => navigate(`/${product.type?.toLowerCase()}s`)}
               className="text-gray-500 hover:text-gray-700 transition-colors"
             >
               {product.type}s

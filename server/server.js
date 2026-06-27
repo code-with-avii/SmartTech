@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet"
 import rateLimit from "express-rate-limit"
-import mongoSanitize from "express-mongo-sanitize";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -40,7 +39,6 @@ const limiter = rateLimit({
   limit:100,
 })
 app.use(limiter);
-app.use(mongoSanitize())
 app.use(hpp())
 app.post("/api/payments/webhook", express.raw({ type: "application/json" }), handlePaymentWebhook);
 app.use(express.json());
@@ -52,15 +50,12 @@ app.get("/", (req, res) => {
 
 app.get("/products", async (req, res) => {
   try {
-    const products = await Product.find()
-    console.log("Products fetched:", products.length);
+    const products = await Product.find().populate("category", "name");
     return res.json(products);
   } catch (error) {
-     console.error("Products Error:", error);
-  }  return res.status(500).json({
-    message: error.message,
-    stack: error.stack,
-  });
+    console.error("Products Error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
 });
 
 app.get("/products/:id", async (req, res) => {
@@ -77,14 +72,15 @@ app.get("/products/:id", async (req, res) => {
 
 app.post("/products", verifyAccessToken, isAdmin, async (req, res) => {
   try {
-    const { price, name, image, description, category } = req.body;
+    const { price, name, image, description, category, type } = req.body;
 
     const product = await Product.create({
       price,
       name,
       image,
       description,
-      category: category || null
+      category: category || null,
+      type: type || "Mobile",
     });
 
     return res.json({
@@ -97,11 +93,11 @@ app.post("/products", verifyAccessToken, isAdmin, async (req, res) => {
 });
 
 app.put("/products/:id", verifyAccessToken, isAdmin, async (req, res) => {
-  const { price, name, image, description, category } = req.body;
+  const { price, name, image, description, category, type } = req.body;
   try {
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
-      { price, name, image, description, category: category || null },
+      { price, name, image, description, category: category || null, type: type || "Mobile" },
       { new: true }
     ).populate("category", "name");
     res.json({ message: "Product updated", product: updatedProduct });
