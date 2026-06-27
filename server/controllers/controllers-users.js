@@ -2,6 +2,7 @@ import User from "../models/users.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { sendVerificationEmail, generateVerificationToken } from "../utils/emailService.js";
+import { accessCookieOptions, refreshCookieOptions } from "../utils/cookieOptions.js";
 
 //ACCESS TOKEN
 export function generateAccessToken(user) {
@@ -82,20 +83,11 @@ async function Signup(req, res) {
     await user.save();
 
     res
-      .cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-        maxAge: 15 * 60 * 1000,
-      })
-      .cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      })
+      .cookie("accessToken", accessToken, accessCookieOptions)
+      .cookie("refreshToken", refreshToken, refreshCookieOptions)
       .json({
         accessToken: accessToken,
+        refreshToken,
         message: "Signup successful. Please check your email to verify your account.",
         user: {
           email: user.email,
@@ -145,22 +137,13 @@ async function Login(req, res) {
     user.refreshToken = refreshToken;
     await user.save();
     res
-      .cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-        expiresIn: 15 * 60 * 1000,
-      })
-      .cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-        expiresIn: 7 * 24 * 60 * 60 * 1000,
-      })
+      .cookie("accessToken", accessToken, accessCookieOptions)
+      .cookie("refreshToken", refreshToken, refreshCookieOptions)
       .status(200)
       .json({
         message: "Login Successfull",
         accessToken,
+        refreshToken,
         user: {
           email: user.email,
           name: user.name,
@@ -184,8 +167,8 @@ const LogoutUser = async (req, res) => {
 
     const cookieOptions = {
       httpOnly: true,
-      secure: true,
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     };
 
     return res
@@ -203,7 +186,7 @@ const LogoutUser = async (req, res) => {
 };
 
 export const RefreshUser = async (req, res) => {
-  const refreshToken = req.cookies.refreshToken;
+  const refreshToken = req.body.refreshToken || req.cookies.refreshToken;
 
   if (!refreshToken) {
     return res.status(401).json({
@@ -229,20 +212,14 @@ export const RefreshUser = async (req, res) => {
     await user.save();
 
     res
-      .cookie("accessToken", newAccessToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "strict",
-        expiresIn: 15 * 60 * 1000,
-      })
-      .cookie("refreshToken", newRefreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "strict",
-        expiresIn: 7 * 24 * 60 * 60 * 1000,
-      })
+      .cookie("accessToken", newAccessToken, accessCookieOptions)
+      .cookie("refreshToken", newRefreshToken, refreshCookieOptions)
       .status(200)
-      .json({ message: "Token refreshed", accessToken: newAccessToken });
+      .json({
+        message: "Token refreshed",
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      });
   } catch (error) {
     return res.status(403).json({
       message: "Invalid or expired refresh token",

@@ -28,6 +28,9 @@ const Login = () => {
       };
 
       localStorage.setItem("accessToken", res.data.accessToken);
+      if (res.data.refreshToken) {
+        localStorage.setItem("refreshToken", res.data.refreshToken);
+      }
       localStorage.setItem("user", JSON.stringify(userPayload));
 
       dispatch(login(userPayload));
@@ -39,7 +42,7 @@ const Login = () => {
         navigate("/");
       }
     } catch (err) {
-      alert(err.response?.data?.msg || "Login failed ❌");
+      alert(err.response?.data?.message || "Login failed ❌");
     }
   };
 

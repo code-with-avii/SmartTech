@@ -20,24 +20,24 @@ const ProductDetail = () => {
   const [activeTab, setActiveTab] = useState('description');
 
   useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_URL}/products/${id}`);
+        if (!response.ok) {
+          throw new Error('Product not found');
+        }
+        const data = await response.json();
+        setProduct(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchProduct();
   }, [id]);
-
-  const fetchProduct = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_URL}/products/${id}`);
-      if (!response.ok) {
-        throw new Error('Product not found');
-      }
-      const data = await response.json();
-      setProduct(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleAddToCart = () => {
     const productToAdd = {

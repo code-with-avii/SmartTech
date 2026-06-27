@@ -51,9 +51,8 @@ const wishlistSlice = createSlice({
       state.items = action.payload;
       saveWishlistToStorage(state.items);
     },
-    moveWishlistToCart: (state, action) => {
-      // This action doesn't modify state, it's handled by the component
-      // The actual cart logic is handled in the Wishlist component
+    moveWishlistToCart: () => {
+      // Handled by the Wishlist component; no state change needed here
     },
   },
 });

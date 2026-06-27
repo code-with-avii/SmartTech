@@ -1,4 +1,5 @@
 import { generateAccessToken, generateRefreshToken } from "./controllers-users.js";
+import { accessCookieOptions, refreshCookieOptions } from "../utils/cookieOptions.js";
 
 export async function googleAssignToken(req, res) {
   try {
@@ -12,18 +13,8 @@ export async function googleAssignToken(req, res) {
     req.user.refreshToken = refreshToken;
     await req.user.save();
 
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict",
-      expiresIn: 15 * 60 * 1000,
-    });
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict",
-      expiresIn: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("accessToken", accessToken, accessCookieOptions);
+    res.cookie("refreshToken", refreshToken, refreshCookieOptions);
 
     const userPayload = {
       email: req.user.email,
@@ -33,7 +24,7 @@ export async function googleAssignToken(req, res) {
 
     const frontendUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/google-callback` : "http://localhost:5173/google-callback";
     res.redirect(
-      `${frontendUrl}?accessToken=${accessToken}&user=${encodeURIComponent(JSON.stringify(userPayload))}`
+      `${frontendUrl}?accessToken=${accessToken}&refreshToken=${refreshToken}&user=${encodeURIComponent(JSON.stringify(userPayload))}`
     );
   } catch (e) {
     return res.status(500).json({

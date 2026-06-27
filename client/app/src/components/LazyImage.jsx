@@ -22,14 +22,13 @@ const LazyImage = ({ src, alt, className, placeholder = '/placeholder-image.jpg'
       }
     );
 
-    if (imgRef.current) {
-      observer.observe(imgRef.current);
+    const element = imgRef.current;
+    if (element) {
+      observer.observe(element);
     }
 
     return () => {
-      if (imgRef.current) {
-        observer.disconnect();
-      }
+      observer.disconnect();
     };
   }, []);
 

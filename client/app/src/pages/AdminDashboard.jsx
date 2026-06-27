@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
 import { API_URL } from "../Utils/config.js";
 import { Logout } from "../Store/userSlice.js";
 
@@ -29,6 +28,42 @@ const AdminDashboard = () => {
     category: "",
   });
 
+  const token = localStorage.getItem("accessToken");
+  const apiOptions = useMemo(
+    () => ({
+      withCredentials: true,
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+    [token],
+  );
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/admin/stats`, apiOptions);
+      setStats(res.data);
+    } catch (err) {
+      console.error("Error fetching stats", err);
+    }
+  }, [apiOptions]);
+
+  const fetchProducts = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API_URL}/products`);
+      setProducts(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API_URL}/categories`, apiOptions);
+      setCategories(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [apiOptions]);
+
   const handleLogout = async () => {
     try {
       await axios.post(
@@ -36,60 +71,49 @@ const AdminDashboard = () => {
         {},
         {
           withCredentials: true,
+          headers: { Authorization: `Bearer ${token}` },
         },
       );
       localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
 
-      dispatch(logout());
+      dispatch(Logout());
       navigate("/login");
-    } catch (error) {
-      console.error("Logout failed", error);
+    } catch (logoutError) {
+      console.error("Logout failed", logoutError);
     }
   };
 
   useEffect(() => {
     if (!user || user.role !== "admin") {
       navigate("/");
-    } else {
-      fetchStats();
-      fetchProducts();
-      fetchCategories();
+      return;
     }
-  }, [user, navigate]);
 
-  const token = localStorage.getItem("accessToken");
-  const apiOptions = {
-    withCredentials: true,
-    headers: { Authorization: `Bearer ${token}` },
-  };
+    let cancelled = false;
 
-  const fetchStats = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/api/admin/stats`, apiOptions);
-      setStats(res.data);
-    } catch (err) {
-      console.error("Error fetching stats", err);
-    }
-  };
+    (async () => {
+      try {
+        const [statsRes, productsRes, categoriesRes] = await Promise.all([
+          axios.get(`${API_URL}/api/admin/stats`, apiOptions),
+          axios.get(`${API_URL}/products`),
+          axios.get(`${API_URL}/categories`, apiOptions),
+        ]);
+        if (!cancelled) {
+          setStats(statsRes.data);
+          setProducts(productsRes.data);
+          setCategories(categoriesRes.data);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    })();
 
-  const fetchProducts = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/products`);
-      setProducts(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/categories`, apiOptions);
-      setCategories(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    return () => {
+      cancelled = true;
+    };
+  }, [user, navigate, apiOptions]);
 
   // Category Actions
   const handleAddCategory = async (e) => {
@@ -102,7 +126,7 @@ const AdminDashboard = () => {
       );
       setNewCatName("");
       fetchCategories();
-    } catch (err) {
+    } catch {
       setError("Failed to add category");
     }
   };
@@ -112,7 +136,7 @@ const AdminDashboard = () => {
     try {
       await axios.delete(`${API_URL}/categories/${id}`, apiOptions);
       fetchCategories();
-    } catch (err) {
+    } catch {
       alert("Failed to delete category");
     }
   };
@@ -159,7 +183,7 @@ const AdminDashboard = () => {
       setShowProductModal(false);
       fetchProducts();
       if (activeTab === "dashboard") fetchStats();
-    } catch (err) {
+    } catch {
       alert("Failed to save product");
     }
   };
@@ -170,7 +194,7 @@ const AdminDashboard = () => {
       await axios.delete(`${API_URL}/products/${id}`, apiOptions);
       fetchProducts();
       if (activeTab === "dashboard") fetchStats();
-    } catch (err) {
+    } catch {
       alert("Failed to delete product");
     }
   };
@@ -227,6 +251,9 @@ const AdminDashboard = () => {
 
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto p-8">
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">{error}</div>
+        )}
         {/* Dashboard Tab */}
         {activeTab === "dashboard" && (
           <div className="animate-fade-in">
@@ -499,7 +526,6 @@ const AdminDashboard = () => {
             </div>
           </div>
         )}
-        //users tab
         {activeTab === "users" && (
           <div className="bg-white p-6 rounded-xl shadow">
             <h2 className="text-xl font-bold mb-4">Users</h2>
@@ -524,7 +550,6 @@ const AdminDashboard = () => {
             </table>
           </div>
         )}
-        //orders tab
         {activeTab === "orders" && (
           <div className="bg-white p-6 rounded-xl shadow">
             <h2 className="text-xl font-bold mb-4">Orders</h2>

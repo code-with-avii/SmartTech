@@ -61,14 +61,16 @@ const RazorpayPayment = () => {
   const redirectToLogin = (message) => {
     setError(message || "Session expired. Please login again to continue payment.");
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     setTimeout(() => navigate(LOGIN_ROUTE), 1000);
   };
 
   const refreshAccessToken = async () => {
     try {
+      const storedRefreshToken = localStorage.getItem("refreshToken");
       const response = await axios.post(
         `${AUTH_BASE_URL}/refresh`,
-        {},
+        { refreshToken: storedRefreshToken },
         {
           withCredentials: true,
         },
@@ -76,6 +78,9 @@ const RazorpayPayment = () => {
       const freshToken = response?.data?.accessToken;
       if (freshToken) {
         localStorage.setItem("accessToken", freshToken);
+        if (response?.data?.refreshToken) {
+          localStorage.setItem("refreshToken", response.data.refreshToken);
+        }
         return freshToken;
       }
       return null;

@@ -40,7 +40,7 @@ const limiter = rateLimit({
   limit:100,
 })
 app.use(limiter);
-app.use(mongoSanitize)
+app.use(mongoSanitize())
 app.use(hpp())
 app.post("/api/payments/webhook", express.raw({ type: "application/json" }), handlePaymentWebhook);
 app.use(express.json());
@@ -51,25 +51,45 @@ app.get("/", (req, res) => {
 });
 
 app.get("/products", async (req, res) => {
-  const products = await Product.find().populate("category", "name");
-  return res.json(products);
+  try {
+    const products = await Product.find().populate("category", "name");
+    return res.json(products);
+  } catch (error) {
+    return res.status(500).json({ message: "Server error" });
+  }
+});
+
+app.get("/products/:id", async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id).populate("category", "name");
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    return res.json(product);
+  } catch (error) {
+    return res.status(500).json({ message: "Server error" });
+  }
 });
 
 app.post("/products", verifyAccessToken, isAdmin, async (req, res) => {
-  const { price, name, image, description, category } = req.body;
+  try {
+    const { price, name, image, description, category } = req.body;
 
-  const product = await Product.create({
-    price,
-    name,
-    image,
-    description,
-    category: category || null
-  });
+    const product = await Product.create({
+      price,
+      name,
+      image,
+      description,
+      category: category || null
+    });
 
-  return res.json({
-    message: "Product Added successfully",
-    product,
-  });
+    return res.json({
+      message: "Product Added successfully",
+      product,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Server error" });
+  }
 });
 
 app.put("/products/:id", verifyAccessToken, isAdmin, async (req, res) => {
@@ -151,6 +171,14 @@ app.get("/api/admin/stats", verifyAccessToken, isAdmin, async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Error fetching stats" });
   }
+});
+
+app.use((err, req, res, next) => {
+  if (err.message === "Not allowed by CORS") {
+    return res.status(403).json({ message: "Not allowed by CORS" });
+  }
+  console.error(err);
+  res.status(500).json({ message: "Internal server error" });
 });
 
 export default app;
