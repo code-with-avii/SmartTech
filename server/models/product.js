@@ -6,14 +6,20 @@ const productSchema = new Schema(
             type:String,
             required:true,
         },
+        type:{
+            type:String,
+            required:true,
+            enum:["Mobile","Laptop","Tablet","Watch","Audio","Accessories","Drone","Camera"],
+            default:"Mobile"
+        },
         price:{
             type:Number,
             required:true,
             default:null,
         },
-        // brand:{
-        //     type:String,
-        // },
+        brand:{
+            type:String,
+        },
         image:String,
         description:{
             type:String,
