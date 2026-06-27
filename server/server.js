@@ -51,8 +51,10 @@ app.get("/", (req, res) => {
 });
 
 app.get("/products", async (req, res) => {
+  console.log("GET /products route hit");
   try {
     const products = await Product.find().populate("category", "name");
+    console.log("Products fetched:", products.length);
     return res.json(products);
   } catch (error) {
     return res.status(500).json({ message: "Server error" });
