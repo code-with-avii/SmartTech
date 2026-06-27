@@ -1,5 +1,4 @@
-import React from "react";
-
+import React from "react"
 const Banner = () => {
   return (
     <div
@@ -30,7 +29,7 @@ const Banner = () => {
         {/* Right Side (optional image placeholder) */}
         <div className="mt-8 md:mt-0">
           <img
-            src="https://via.placeholder.com/300"
+            src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500"
             alt="sale"
             className="rounded-lg shadow-lg"
           />

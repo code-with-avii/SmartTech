@@ -54,7 +54,7 @@ const Contents = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+    <div className="min-h-screen bg-linear-to-br from-purple-50 to-pink-50">
       <div className="container mx-auto px-4 py-12">
         {/* Header Section */}
         <div className="text-center mb-12">
@@ -98,7 +98,7 @@ const Contents = () => {
               className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden group"
             >
               {/* Product Image */}
-                <Link to={`/product/${product._id}`} className="block relative overflow-hidden h-48 bg-gradient-to-br from-purple-50 to-pink-50">
+                <Link to={`/product/${product._id}`} className="block relative overflow-hidden h-48 bg-linear-to-br from-purple-50 to-pink-50">
                 <img
                   src={product.image}
                   onError={(e) => {
@@ -109,7 +109,7 @@ const Contents = () => {
                 />
                 
                 {/* Badge */}
-                <div className="absolute top-3 right-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                <div className="absolute top-3 right-3 bg-linear-to-r from-purple-500 to-pink-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
                   20% OFF
                 </div>
                 
@@ -159,7 +159,7 @@ const Contents = () => {
                 {/* Add to Cart Button */}
                 <button
                   onClick={() => handleAddtoCart(product)}
-                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 px-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-105 font-semibold text-sm"
+                  className="w-full bg-linear-to-r from-purple-500 to-pink-500 text-white py-2 px-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-105 font-semibold text-sm"
                 >
                   Add to Cart
                 </button>
