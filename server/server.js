@@ -13,6 +13,7 @@ import User from "./models/users.js";
 import cookieParser from "cookie-parser";
 import verifyAccessToken, { isAdmin } from "./middleware/authmiddleware.js";
 import { handlePaymentWebhook } from "./controllers/paymentController.js";
+import { addProductReview } from "./controllers/reviewController.js";
 import hpp from "hpp";
 
 
@@ -50,7 +51,20 @@ app.get("/", (req, res) => {
 
 app.get("/products", async (req, res) => {
   try {
-    const products = await Product.find().populate("category", "name");
+    const { search } = req.query;
+    const filter = {};
+
+    if (search?.trim()) {
+      const term = search.trim();
+      filter.$or = [
+        { name: { $regex: term, $options: "i" } },
+        { brand: { $regex: term, $options: "i" } },
+        { type: { $regex: term, $options: "i" } },
+        { description: { $regex: term, $options: "i" } },
+      ];
+    }
+
+    const products = await Product.find(filter).populate("category", "name");
     return res.json(products);
   } catch (error) {
     console.error("Products Error:", error);
@@ -69,6 +83,8 @@ app.get("/products/:id", async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 });
+
+app.post("/products/:id/reviews", verifyAccessToken, addProductReview);
 
 app.post("/products", verifyAccessToken, isAdmin, async (req, res) => {
   try {

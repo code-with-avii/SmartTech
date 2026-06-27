@@ -5,11 +5,14 @@ import { useDispatch } from "react-redux";
 import { login } from "../Store/userSlice";
 import { API_URL } from "../Utils/config.js";
 import {FcGoogle} from "react-icons/fc";
+import { useToast } from "../hooks/useToast.js";
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { showToast } = useToast();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -35,14 +38,14 @@ const Login = () => {
 
       dispatch(login(userPayload));
 
-      alert("Login successful");
+      showToast("Login successful");
       if (userPayload.role === "admin") {
         navigate("/admin");
       } else {
         navigate("/");
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Login failed ❌");
+      showToast(err.response?.data?.message || "Login failed", "error");
     }
   };
 

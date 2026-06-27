@@ -3,14 +3,18 @@ import Navbar from "../components/Navbar";
 import { FaSignOutAlt } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import LogoutUser from "../components/LogoutUser.jsx";
-import Logout  from "../Store/userSlice.js";
+import { Logout } from "../Store/userSlice.js";
 import { Link } from "react-router";
 import Footer from "../components/Footer.jsx";
 import VerificationStatus from "../components/VerificationStatus.jsx";
+import { useToast } from "../hooks/useToast.js";
+import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
   const { name, email, isVerified } = useSelector((state) => state.user);
   const dispatch = useDispatch();
+  const { showToast } = useToast();
+  const navigate = useNavigate();
   
   return (
     <>
@@ -68,6 +72,9 @@ const Profile = () => {
             <div>
               <p className="font-semibold text-gray-700 mb-2">My Stuff</p>
               <ul className="space-y-2 text-gray-600">
+                <li>
+                  <Link to="/orders" className="hover:text-blue-600">My Orders</Link>
+                </li>
                 <li>My Coupons</li>
                 <li>My Reviews & Ratings</li>
                 <li>All Notifications</li>
@@ -80,9 +87,10 @@ const Profile = () => {
               <FaSignOutAlt />
               <button
                 onClick={async () => {
-                  alert("logged out");
                   await LogoutUser();
                   dispatch(Logout());
+                  showToast("Logged out successfully");
+                  navigate("/login");
                 }}
               >
                 Logout

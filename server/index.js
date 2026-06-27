@@ -5,6 +5,7 @@ import connectDB from "./db/connectdb.js";
 import authrouter from "./routes/authRoutes.js";
 import emailRoutes from "./routes/emailRoutes.js";
 import paymentRouter from "./routes/paymentRoutes.js";
+import orderRouter from "./routes/orderRoutes.js";
 import passport from "passport";
 import "./controllers/passport.js";
 
@@ -12,6 +13,7 @@ app.use(passport.initialize());
 app.use("/api/auth", authrouter);
 app.use("/api/email", emailRoutes);
 app.use("/api/payments", paymentRouter);
+app.use("/api/orders", orderRouter);
 
 const port = process.env.PORT || 5000;
 

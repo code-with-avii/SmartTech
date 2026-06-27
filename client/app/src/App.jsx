@@ -21,6 +21,10 @@ import ProductDetail from "./pages/ProductDetail.jsx"
 import Wishlist from "./pages/Wishlist.jsx"
 import RazorpayPayment from "./pages/RazorpayPayment.jsx";
 import GoogleCallback from "./pages/GoogleCallback.jsx";
+import Orders from "./pages/Orders.jsx";
+import SearchResults from "./pages/SearchResults.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import AdminRoute from "./components/AdminRoute.jsx";
 
 function App() {
   const dispatch = useDispatch();
@@ -35,9 +39,7 @@ function App() {
   }, [dispatch]);
 
   return (
-    
     <Router>
-      {/* <Home/> */}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/google-callback" element={<GoogleCallback />} />
@@ -47,7 +49,9 @@ function App() {
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/signup" element={<SignUp/>}/>
         <Route path="/login" element={<Login/>}/>
-        <Route path="/profile" element= {<Profile/>}/>
+        <Route path="/profile" element={<ProtectedRoute><Profile/></ProtectedRoute>}/>
+        <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+        <Route path="/search" element={<SearchResults />} />
         <Route path="/mobiles" element={<MobileSection/>}/>
         <Route path="/laptops" element={<LaptopSection/>}/>
         <Route path="/drones" element={<DroneSection/>}/>
@@ -56,16 +60,12 @@ function App() {
         <Route path="/verify-email" element={<VerifyEmail/>}/>
         <Route path="/forgot-password" element={<ForgotPassword/>}/>
         <Route path="/reset-password" element={<ResetPassword/>}/>
-        <Route path = "/admin" element={<AdminDashboard/>}/>
+        <Route path="/admin" element={<AdminRoute><AdminDashboard/></AdminRoute>}/>
         <Route path="/product/:id" element={<ProductDetail/>}/>
-        <Route path="/razorpay-payment" element={<RazorpayPayment />} />
-        <Route path="/google-callback"
-  element={<GoogleCallback />}/>
-        
+        <Route path="/razorpay-payment" element={<ProtectedRoute><RazorpayPayment /></ProtectedRoute>} />
       </Routes>
     </Router>
   );
 }
 
 export default App;
-

@@ -6,11 +6,13 @@ import { useSelector, useDispatch } from "react-redux";
 import {increaseQuantity,decreaseQuantity,removeFromCart,clearCart,} from "../Store/cartSlice";
 import {FaTrash, FaPlus,FaMinus,FaArrowRight,FaShoppingBag,} from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
+import { useToast } from "../hooks/useToast.js";
 
 const Cart = () => {
   const { items } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const total = items.reduce(
     (acc, item) => {
@@ -177,7 +179,7 @@ const Cart = () => {
                 <button
                   onClick={() => {
                     if (items.length === 0) {
-                      alert('Your cart is empty. Please add items before proceeding to checkout.');
+                      showToast("Your cart is empty. Add items before checkout.", "error");
                       return;
                     }
                     navigate("/razorpay-payment");

@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import Razorpay from "razorpay";
 import Payment from "../models/payment.js";
+import Order from "../models/order.js";
 
 const CURRENCY = "INR";
 const isProduction = process.env.NODE_ENV === "production";
@@ -33,12 +34,23 @@ const getReadableError = (error, fallback) => {
 
 export const createOrder = async (req, res) => {
   try {
-    const { amount } = req.body;
+    const { amount, items } = req.body;
     const normalizedAmount = Number(amount);
 
     if (!Number.isFinite(normalizedAmount) || normalizedAmount <= 0) {
       return res.status(400).json({ message: "Invalid amount provided" });
     }
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: "Cart items are required" });
+    }
+
+    const cartItems = items.map((item) => ({
+      productId: item._id || item.productId,
+      quantity: item.quantity || 1,
+      name: item.name,
+      price: item.price,
+    }));
 
     const amountInPaise = toPaise(normalizedAmount);
     const razorpay = getRazorpayClient();
@@ -55,6 +67,7 @@ export const createOrder = async (req, res) => {
       amount: toRupees(order.amount),
       currency: order.currency,
       status: "Pending",
+      cartItems,
     });
 
     return res.status(201).json({
@@ -113,6 +126,20 @@ export const verifyPayment = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Payment verification failed",
+      });
+    }
+
+    const existingOrder = await Order.findOne({ razorpayOrderId: razorpay_order_id });
+    if (!existingOrder && payment.cartItems?.length > 0) {
+      await Order.create({
+        user: req.user.userId,
+        products: payment.cartItems.map((item) => ({
+          product: item.productId,
+          quantity: item.quantity,
+        })),
+        totalAmount: payment.amount,
+        status: "Processing",
+        razorpayOrderId: razorpay_order_id,
       });
     }
 

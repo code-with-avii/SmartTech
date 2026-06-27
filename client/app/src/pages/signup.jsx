@@ -2,6 +2,7 @@ import axios from "axios";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { API_URL } from "../Utils/config.js";
+import { useToast } from "../hooks/useToast.js";
 
 const SignUp = () => {
   const [email, setEmail] = useState("");
@@ -11,6 +12,7 @@ const SignUp = () => {
   const [messageType, setMessageType] = useState("");
 
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const handlesignup = async (e) => {
     e.preventDefault(); // prevent reload
@@ -41,7 +43,7 @@ const SignUp = () => {
       }, 3000);
     } catch (err) {
       console.log(err.response?.data);
-      alert("Signup Failed");
+      showToast("Signup failed", "error");
     }
   };
 

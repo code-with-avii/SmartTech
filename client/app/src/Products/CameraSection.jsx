@@ -8,6 +8,7 @@ import Footer from "../components/Footer.jsx";
 import Navbar from "../components/Navbar";
 import TopNavbar from "../components/TopNavbar.jsx";
 import { API_URL } from "../Utils/config.js";
+import { useToast } from "../hooks/useToast.js";
 
 const CameraSection = () => {
   const [cameras, setCameras] = useState([]);
@@ -19,6 +20,7 @@ const CameraSection = () => {
   const [search, setSearch] = useState("");
 
   const dispatch = useDispatch();
+  const { showToast } = useToast();
 
   useEffect(() => {
     axios
@@ -60,8 +62,8 @@ const CameraSection = () => {
   }, [cameras, search, priceFilter, brandFilter, sort]);
 
   const handleAddtoCart = (item) => {
-    alert(`${item.name} added to cart!`);
     dispatch(addToCart(item));
+    showToast(`${item.name} added to cart!`);
   };
 
   if (loading) {

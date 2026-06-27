@@ -7,7 +7,7 @@ import { CategoryPageSkeleton } from "./LoadingSkeleton.jsx";
 import { Link } from 'react-router-dom';
 import LazyImage from "./LazyImage.jsx";
 import MobileFilterPanel from "./MobileFilterPanel.jsx";
-import ToastNotification from "./ToastNotification.jsx";
+import { useToast } from "../hooks/useToast.js";
 import { FaHeart } from 'react-icons/fa';
 import { API_URL } from "../Utils/config.js";
 
@@ -20,7 +20,7 @@ const ProductSection = ({ type, title }) => {
   const [sort, setSort] = useState("");
   const [search, setSearch] = useState("");
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  const [toast, setToast] = useState({ message: '', isVisible: false });
+  const { showToast } = useToast();
 
   const dispatch = useDispatch();
   const wishlistItems = useSelector((state) => state.wishlist.items);
@@ -66,14 +66,8 @@ const ProductSection = ({ type, title }) => {
   }, [products, search, priceFilter, brandFilter, sort]);
 
   const handleAddtoCart = (item) => {
-    // Immediate alert to test if function is called
-    alert(`${item.name} added to cart!`);
-    
-    // Add to cart
     dispatch(addToCart(item));
-    
-    // Set toast state
-    setToast({ message: `${item.name} added to cart!`, isVisible: true });
+    showToast(`${item.name} added to cart!`);
   };
 
   const handleAddToWishlist = (item) => {
@@ -81,19 +75,15 @@ const ProductSection = ({ type, title }) => {
     
     if (isInWishlist) {
       dispatch(removeFromWishlist(item._id));
-      alert(`${item.name} removed from wishlist!`);
+      showToast(`${item.name} removed from wishlist!`);
     } else {
       dispatch(addToWishlist(item));
-      alert(`${item.name} added to wishlist!`);
+      showToast(`${item.name} added to wishlist!`);
     }
   };
 
   const isInWishlist = (itemId) => {
     return wishlistItems.some(item => item._id === itemId);
-  };
-
-  const closeToast = () => {
-    setToast({ message: '', isVisible: false });
   };
 
   if (loading) {
@@ -328,13 +318,6 @@ const ProductSection = ({ type, title }) => {
           setSearch("");
           setSort("");
         }}
-      />
-      
-      {/* Toast Notification */}
-      <ToastNotification
-        message={toast.message}
-        isVisible={toast.isVisible}
-        onClose={closeToast}
       />
     </div>
   );

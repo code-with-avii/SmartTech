@@ -8,6 +8,7 @@ import Footer from "../components/Footer.jsx";
 import Navbar from "../components/Navbar.jsx";
 import TopNavbar from "../components/TopNavbar.jsx";
 import { API_URL } from "../Utils/config.js";
+import { useToast } from "../hooks/useToast.js";
 
 const TabletSection = () => {
   const [tablets, setTablets] = useState([]);
@@ -19,6 +20,7 @@ const TabletSection = () => {
   const [search, setSearch] = useState("");
 
   const dispatch = useDispatch();
+  const { showToast } = useToast();
 
   useEffect(() => {
     axios
@@ -74,6 +76,7 @@ const TabletSection = () => {
 
   const handleAddtoCart = (product) => {
     dispatch(addToCart(product));
+    showToast(`${product.name} added to cart!`);
   };
 
   // LOADING SKELETON
@@ -279,10 +282,7 @@ const TabletSection = () => {
                 {/* Buttons */}
                 <div className="flex gap-3">
                   <button
-                    onClick={() => {
-                      alert("Item added to cart!");
-                      handleAddtoCart(tablet);
-                    }}
+                    onClick={() => handleAddtoCart(tablet)}
                     className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-4 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105 font-semibold"
                   >
                     Add to Cart

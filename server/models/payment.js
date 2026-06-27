@@ -43,6 +43,18 @@ const paymentSchema = new Schema(
       type: String,
       default: null,
     },
+    cartItems: [
+      {
+        productId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+          required: true,
+        },
+        quantity: { type: Number, required: true, default: 1 },
+        name: String,
+        price: Number,
+      },
+    ],
   },
   { timestamps: true },
 );

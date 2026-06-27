@@ -30,6 +30,10 @@ const orderSchema = new Schema(
             default: "Pending",
             enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
         },
+        razorpayOrderId: {
+            type: String,
+            default: null,
+        },
     },
     { timestamps: true }
 );

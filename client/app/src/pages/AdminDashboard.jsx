@@ -4,12 +4,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { API_URL } from "../Utils/config.js";
 import { Logout } from "../Store/userSlice.js";
+import { useToast } from "../hooks/useToast.js";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const user = useSelector((state) => state.user);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { showToast } = useToast();
 
   // State
   const [stats, setStats] = useState(null);
@@ -138,7 +140,7 @@ const AdminDashboard = () => {
       await axios.delete(`${API_URL}/categories/${id}`, apiOptions);
       fetchCategories();
     } catch {
-      alert("Failed to delete category");
+      showToast("Failed to delete category", "error");
     }
   };
 
@@ -178,16 +180,16 @@ const AdminDashboard = () => {
           productForm,
           apiOptions,
         );
-        alert("Product updated");
+        showToast("Product updated");
       } else {
         await axios.post(`${API_URL}/products`, productForm, apiOptions);
-        alert("Product created");
+        showToast("Product created");
       }
       setShowProductModal(false);
       fetchProducts();
       if (activeTab === "dashboard") fetchStats();
     } catch {
-      alert("Failed to save product");
+      showToast("Failed to save product", "error");
     }
   };
 
@@ -198,7 +200,7 @@ const AdminDashboard = () => {
       fetchProducts();
       if (activeTab === "dashboard") fetchStats();
     } catch {
-      alert("Failed to delete product");
+      showToast("Failed to delete product", "error");
     }
   };
 

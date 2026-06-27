@@ -3,9 +3,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '../Store/cartSlice.js';
 import { addToWishlist, removeFromWishlist } from '../Store/wishlistSlice.js';
 import { FaHeart, FaShoppingCart, FaTimes, FaStar } from 'react-icons/fa';
+import { useToast } from "../hooks/useToast.js";
 
 const QuickView = ({ product, isOpen, onClose }) => {
   const dispatch = useDispatch();
+  const { showToast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const wishlistItems = useSelector((state) => state.wishlist.items);
 
@@ -18,7 +20,7 @@ const QuickView = ({ product, isOpen, onClose }) => {
       quantity: quantity
     };
     dispatch(addToCart(productToAdd));
-    alert(`${product.name} added to cart!`);
+    showToast(`${product.name} added to cart!`);
     onClose();
   };
 
@@ -27,10 +29,10 @@ const QuickView = ({ product, isOpen, onClose }) => {
     
     if (isInWishlist) {
       dispatch(removeFromWishlist(product._id));
-      alert(`${product.name} removed from wishlist!`);
+      showToast(`${product.name} removed from wishlist!`);
     } else {
       dispatch(addToWishlist(product));
-      alert(`${product.name} added to wishlist!`);
+      showToast(`${product.name} added to wishlist!`);
     }
   };
 

@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { clearCart } from "../Store/cartSlice.js";
 import { API_URL } from "../Utils/config.js";
+import { useToast } from "../hooks/useToast.js";
 
 const API_BASE_URL = `${API_URL}/api/payments`;
 const AUTH_BASE_URL = `${API_URL}/api/auth`;
@@ -27,6 +28,7 @@ const RazorpayPayment = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { items } = useSelector((state) => state.cart);
+  const { showToast } = useToast();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -151,7 +153,15 @@ const RazorpayPayment = () => {
       const createOrderResponse = await withAuthRetry((token) =>
         axios.post(
           `${API_BASE_URL}/create-order`,
-          { amount: totalAmount },
+          {
+            amount: totalAmount,
+            items: items.map((item) => ({
+              _id: item._id,
+              quantity: item.quantity || 1,
+              name: item.name,
+              price: item.price,
+            })),
+          },
           {
             headers: { Authorization: `Bearer ${token}` },
             withCredentials: true,
@@ -199,6 +209,8 @@ const RazorpayPayment = () => {
               });
               setPaymentStatus("Paid");
               dispatch(clearCart());
+              showToast("Payment successful! Order placed.");
+              setTimeout(() => navigate("/orders"), 2000);
             } else {
               setError("Payment verification failed.");
               setPaymentStatus("Failed");

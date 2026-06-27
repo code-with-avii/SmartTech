@@ -1,23 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import axios from 'axios';
 import { addToCart } from '../Store/cartSlice.js';
 import Navbar from '../components/Navbar.jsx';
 import TopNavbar from '../components/TopNavbar.jsx';
 import Footer from '../components/Footer.jsx';
-import { ProductCardSkeleton } from '../components/LoadingSkeleton.jsx';
 import { API_URL } from "../Utils/config.js";
+import { useToast } from "../hooks/useToast.js";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const isLoggedIn = useSelector((state) => state.user.isLoggedIn);
+  const { showToast } = useToast();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -46,8 +52,46 @@ const ProductDetail = () => {
       quantity: quantity
     };
     dispatch(addToCart(productToAdd));
-    alert(`${product.name} added to cart!`);
+    showToast(`${product.name} added to cart!`);
   };
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (!isLoggedIn) {
+      showToast('Please login to leave a review', 'error');
+      navigate('/login');
+      return;
+    }
+
+    setSubmittingReview(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const res = await axios.post(
+        `${API_URL}/products/${id}/reviews`,
+        { rating: reviewRating, comment: reviewComment },
+        { headers: { Authorization: `Bearer ${token}` }, withCredentials: true },
+      );
+      setProduct(res.data);
+      setReviewComment('');
+      setReviewRating(5);
+      showToast('Review submitted successfully!');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to submit review', 'error');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const renderStars = (rating) =>
+    [...Array(5)].map((_, i) => (
+      <svg
+        key={i}
+        className={`w-5 h-5 ${i < Math.round(rating) ? 'text-yellow-400 fill-current' : 'text-gray-300 fill-current'}`}
+        viewBox="0 0 20 20"
+      >
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+      </svg>
+    ));
 
   const handleQuantityChange = (type) => {
     if (type === 'increase') {
@@ -180,14 +224,10 @@ const ProductDetail = () => {
               
               {/* Rating */}
               <div className="flex items-center space-x-2">
-                <div className="flex text-yellow-400">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <span className="text-gray-600">4.5 (245 reviews)</span>
+                <div className="flex">{renderStars(product.rating || 0)}</div>
+                <span className="text-gray-600">
+                  {product.rating ? product.rating.toFixed(1) : '0.0'} ({product.numReviews || 0} reviews)
+                </span>
               </div>
             </div>
 
@@ -329,10 +369,65 @@ const ProductDetail = () => {
                 )}
 
                 {activeTab === 'reviews' && (
-                  <div className="space-y-4">
-                    <div className="text-center py-8">
-                      <p className="text-gray-500">No reviews yet. Be the first to review this product!</p>
-                    </div>
+                  <div className="space-y-6">
+                    {isLoggedIn ? (
+                      <form onSubmit={handleSubmitReview} className="bg-gray-50 p-4 rounded-lg border">
+                        <h4 className="font-semibold text-gray-900 mb-3">Write a Review</h4>
+                        <div className="mb-3">
+                          <label className="block text-sm text-gray-600 mb-1">Rating</label>
+                          <select
+                            value={reviewRating}
+                            onChange={(e) => setReviewRating(Number(e.target.value))}
+                            className="border rounded-lg px-3 py-2"
+                          >
+                            {[5, 4, 3, 2, 1].map((n) => (
+                              <option key={n} value={n}>{n} Star{n > 1 ? 's' : ''}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <textarea
+                          value={reviewComment}
+                          onChange={(e) => setReviewComment(e.target.value)}
+                          placeholder="Share your experience with this product..."
+                          rows={3}
+                          required
+                          className="w-full border rounded-lg px-3 py-2 mb-3"
+                        />
+                        <button
+                          type="submit"
+                          disabled={submittingReview}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-60"
+                        >
+                          {submittingReview ? 'Submitting...' : 'Submit Review'}
+                        </button>
+                      </form>
+                    ) : (
+                      <p className="text-gray-600">
+                        <button onClick={() => navigate('/login')} className="text-blue-600 hover:underline">
+                          Login
+                        </button>
+                        {' '}to leave a review.
+                      </p>
+                    )}
+
+                    {product.reviews?.length > 0 ? (
+                      <div className="space-y-4">
+                        {product.reviews.map((review, index) => (
+                          <div key={index} className="border-b pb-4">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-medium text-gray-900">{review.name}</span>
+                              <div className="flex">{renderStars(review.rating)}</div>
+                            </div>
+                            <p className="text-gray-600 text-sm">{review.comment}</p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              {new Date(review.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">No reviews yet. Be the first to review this product!</p>
+                    )}
                   </div>
                 )}
               </div>
