@@ -24,6 +24,8 @@ const ProductDetail = () => {
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [recentlyViewed, setRecentlyViewed] = useState([]);
+  const [relatedProducts, setRelatedProducts] = useState([]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -35,6 +37,31 @@ const ProductDetail = () => {
         }
         const data = await response.json();
         setProduct(data);
+
+        // Update recently viewed products in localStorage
+        try {
+          const viewed = JSON.parse(localStorage.getItem("recentlyViewed") || "[]");
+          const filtered = viewed.filter(p => p._id !== data._id);
+          const updated = [data, ...filtered].slice(0, 5);
+          localStorage.setItem("recentlyViewed", JSON.stringify(updated));
+          setRecentlyViewed(updated);
+        } catch (e) {
+          console.error("Error updating recently viewed products:", e);
+        }
+
+        // Fetch related products
+        try {
+          const res = await fetch(`${API_URL}/products`);
+          if (res.ok) {
+            const allProducts = await res.json();
+            const filtered = allProducts.filter(
+              p => p._id !== data._id && (p.type === data.type || (data.category && p.category?._id === data.category?._id))
+            );
+            setRelatedProducts(filtered.slice(0, 4));
+          }
+        } catch (err) {
+          console.error("Error fetching related products:", err);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -435,6 +462,77 @@ const ProductDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Related Products Section */}
+      {relatedProducts.length > 0 && (
+        <div className="container mx-auto px-4 py-8 border-t border-gray-200 dark:border-neutral-700">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            You May Also Like
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {relatedProducts.map((p) => (
+              <div
+                key={p._id}
+                onClick={() => {
+                  navigate(`/product/${p._id}`);
+                  window.scrollTo(0, 0);
+                }}
+                className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-100 dark:border-neutral-700 shadow-sm hover:shadow-md transition-all duration-300 p-4 cursor-pointer group"
+              >
+                <div className="h-40 bg-gray-50 dark:bg-neutral-900 rounded-lg overflow-hidden flex items-center justify-center p-4">
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    className="h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mt-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                  {p.name}
+                </h3>
+                <div className="flex items-center justify-between mt-3">
+                  <span className="font-bold text-gray-900 dark:text-white">Rs.{p.price}</span>
+                  <span className="text-xs bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded font-medium">
+                    {p.type}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recently Viewed Section */}
+      {recentlyViewed.length > 0 && (
+        <div className="container mx-auto px-4 py-8 border-t border-gray-200 dark:border-neutral-700">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            Recently Viewed
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+            {recentlyViewed.map((p) => (
+              <div
+                key={p._id}
+                onClick={() => {
+                  navigate(`/product/${p._id}`);
+                  window.scrollTo(0, 0);
+                }}
+                className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-100 dark:border-neutral-700 shadow-xs hover:shadow-sm transition-all duration-300 p-3 cursor-pointer group"
+              >
+                <div className="h-28 bg-gray-50 dark:bg-neutral-900 rounded-lg overflow-hidden flex items-center justify-center p-2">
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    className="h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <h3 className="text-xs font-medium text-gray-700 dark:text-neutral-300 mt-2 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                  {p.name}
+                </h3>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1">Rs.{p.price}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

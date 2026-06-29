@@ -109,7 +109,7 @@ function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="#" className="text-gray-400 hover:text-blue-400 transition-colors duration-300 flex items-center group">
+                <Link to="/track-order" className="text-gray-400 hover:text-blue-400 transition-colors duration-300 flex items-center group">
                   <FaArrowRight className="w-0 h-0 mr-0 group-hover:w-4 group-hover:h-4 group-hover:mr-2 transition-all duration-300" />
                   Track Order
                 </Link>

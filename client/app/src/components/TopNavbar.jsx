@@ -17,6 +17,9 @@ const TopNavbar = () => {
             <Link 
             to="/help"
             className="cursor-pointer hover:bg-[#528748] px-2 py-1 rounded">Help Center</Link>
+            <Link 
+            to="/track-order"
+            className="cursor-pointer hover:bg-[#528748] px-2 py-1 rounded">Track Order</Link>
             <li className="cursor-pointer hover:bg-[#528748] px-2 py-1 rounded">Call Us 123-456-7890</li>
         </ul>
     </nav>

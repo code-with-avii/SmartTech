@@ -2,6 +2,8 @@ import crypto from "crypto";
 import Razorpay from "razorpay";
 import Payment from "../models/payment.js";
 import Order from "../models/order.js";
+import User from "../models/users.js";
+import { sendOrderConfirmationEmail } from "../utils/emailService.js";
 
 const CURRENCY = "INR";
 const isProduction = process.env.NODE_ENV === "production";
@@ -131,7 +133,7 @@ export const verifyPayment = async (req, res) => {
 
     const existingOrder = await Order.findOne({ razorpayOrderId: razorpay_order_id });
     if (!existingOrder && payment.cartItems?.length > 0) {
-      await Order.create({
+      const newOrder = await Order.create({
         user: req.user.userId,
         products: payment.cartItems.map((item) => ({
           product: item.productId,
@@ -141,6 +143,21 @@ export const verifyPayment = async (req, res) => {
         status: "Processing",
         razorpayOrderId: razorpay_order_id,
       });
+
+      try {
+        const user = await User.findById(req.user.userId);
+        if (user) {
+          await sendOrderConfirmationEmail(
+            user.email,
+            user.name,
+            newOrder._id,
+            payment.cartItems,
+            payment.amount
+          );
+        }
+      } catch (emailError) {
+        console.error("Error sending order confirmation email:", emailError);
+      }
     }
 
     return res.json({
