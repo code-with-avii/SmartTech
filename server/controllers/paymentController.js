@@ -66,7 +66,7 @@ export const createOrder = async (req, res) => {
     await Payment.create({
       user: req.user.userId,
       razorpayOrderId: order.id,
-      amount: toRupees(order.amount),
+      amount: amountInPaise,
       currency: order.currency,
       status: "Pending",
       cartItems,
@@ -74,7 +74,7 @@ export const createOrder = async (req, res) => {
 
     return res.status(201).json({
       order_id: order.id,
-      amount: order.amount,
+      amount: amountInPaise,
       currency: order.currency,
       key: process.env.RAZORPAY_KEY_ID,
       status: "Pending",
