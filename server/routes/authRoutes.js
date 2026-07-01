@@ -8,10 +8,12 @@ import {
 import verifyAccessToken from "../middleware/authmiddleware.js";
 import passport from "passport";
 import { googleAssignToken } from "../controllers/googleControlller.js";
+import { updateOrderStatus } from "../controllers/orderController.js";
 
 const authrouter = express.Router();
 
 //api/auth
+authrouter.put("/admin/orders/:id/status", verifyAccessToken,updateOrderStatus)
 authrouter.post("/signup", Signup);
 authrouter.post("/login", Login);
 authrouter.post("/logout", verifyAccessToken, LogoutUser);

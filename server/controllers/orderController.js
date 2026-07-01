@@ -63,3 +63,25 @@ export const trackOrder = async (req, res) => {
     return res.status(500).json({ message: "Unable to track order" });
   }
 };
+
+export const updateOrderStatus = async (req,res) =>{
+  const { status } = req.body;
+  const order = await Order.findById(req.params.id);
+
+  if (!order) {
+        return res.status(404).json({
+            message: "Order not found"
+        });
+    }
+
+    order.status = status;
+
+    if (status === "Delivered") {
+        order.deliveredAt = new Date();
+    }
+
+    await order.save();
+
+    res.json(order);
+  
+}
