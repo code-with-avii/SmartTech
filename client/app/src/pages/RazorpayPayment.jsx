@@ -157,7 +157,7 @@ const RazorpayPayment = () => {
           {
             amount: totalAmount,
             items: items.map((item) => ({
-              _id: item._id,
+              productId: item._id,
               quantity: item.quantity || 1,
               name: item.name,
               price: item.price,
