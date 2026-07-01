@@ -150,8 +150,9 @@ const RazorpayPayment = () => {
       if (!scriptLoaded) {
         throw new Error("Unable to load Razorpay checkout.");
       }
-
+      console.log(items);
       const createOrderResponse = await withAuthRetry((token) =>
+    
         axios.post(
           `${API_BASE_URL}/create-order`,
           {
