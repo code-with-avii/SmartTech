@@ -25,11 +25,12 @@ const Contents = () => {
     setIsQuickViewOpen(false);
   };
 
-  const fetchProducts = () => {
+  const fetchProducts = async () => {
     axios
-      .get(`${API_URL}/products`)
+      .get(`${API_URL}/products?limit=8`)
       .then((response) => {
         setProducts(response.data);
+        
       })
       .catch((error) => {
         console.error("Error fetching data:", error);
