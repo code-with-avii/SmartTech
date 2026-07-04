@@ -6,7 +6,6 @@ import { useMemo } from "react";
 import { CameraHero } from "../components/HeroBanner.jsx";
 import Footer from "../components/Footer.jsx";
 import Navbar from "../components/Navbar";
-import TopNavbar from "../components/TopNavbar.jsx";
 import { API_URL } from "../Utils/config.js";
 import { useToast } from "../hooks/useToast.js";
 
@@ -24,7 +23,7 @@ const CameraSection = () => {
 
   useEffect(() => {
     axios
-      .get(`${API_URL}/products`)
+      .get(`${API_URL}/products?limit=0`)
       .then((res) => {
         const cameraOnly = res.data.filter(
           (item) => item.type && item.type.toLowerCase() === "camera",
@@ -76,8 +75,7 @@ const CameraSection = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <TopNavbar />
-      <Navbar />
+<Navbar />
       <CameraHero />
       
       <div className="container mx-auto px-4 py-12">

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
-import TopNavbar from "../components/TopNavbar.jsx";
 import Footer from "../components/Footer.jsx";
 import { API_URL } from "../Utils/config.js";
 
@@ -40,8 +39,7 @@ const Orders = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <TopNavbar />
-      <Navbar />
+<Navbar />
 
       <div className="container mx-auto px-4 py-10">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">My Orders</h1>

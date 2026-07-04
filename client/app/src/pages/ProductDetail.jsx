@@ -5,7 +5,6 @@ import axios from 'axios';
 import { addToCart } from '../Store/cartSlice.js';
 import { addToCompare, removeFromCompare } from '../Store/compareSlice.js';
 import Navbar from '../components/Navbar.jsx';
-import TopNavbar from '../components/TopNavbar.jsx';
 import Footer from '../components/Footer.jsx';
 import { API_URL } from "../Utils/config.js";
 import { useToast } from "../hooks/useToast.js";
@@ -56,7 +55,7 @@ const ProductDetail = () => {
 
         // Fetch related products
         try {
-          const res = await fetch(`${API_URL}/products`);
+          const res = await fetch(`${API_URL}/products?limit=0`);
           if (res.ok) {
             const allProducts = await res.json();
             const filtered = allProducts.filter(
@@ -168,8 +167,7 @@ const ProductDetail = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <TopNavbar />
-        <Navbar />
+<Navbar />
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div className="space-y-4">
@@ -217,8 +215,7 @@ const ProductDetail = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <TopNavbar />
-      <Navbar />
+<Navbar />
       
       {/* Breadcrumb */}
       <div className="bg-white border-b">

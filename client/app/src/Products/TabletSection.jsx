@@ -6,7 +6,6 @@ import { useMemo } from "react";
 import { TabletsHero } from "../components/HeroBanner.jsx";
 import Footer from "../components/Footer.jsx";
 import Navbar from "../components/Navbar.jsx";
-import TopNavbar from "../components/TopNavbar.jsx";
 import { API_URL } from "../Utils/config.js";
 import { useToast } from "../hooks/useToast.js";
 
@@ -24,7 +23,7 @@ const TabletSection = () => {
 
   useEffect(() => {
     axios
-      .get(`${API_URL}/products`)
+      .get(`${API_URL}/products?limit=0`)
       .then((res) => {
         const tabletOnly = res.data.filter(
           (item) => item.type && item.type.toLowerCase() === "tablet",
@@ -110,8 +109,7 @@ const TabletSection = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <TopNavbar />
-      <Navbar />
+<Navbar />
       <div className="container mx-auto px-4 py-8">
         <TabletsHero />
       </div>

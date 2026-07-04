@@ -6,7 +6,6 @@ import { useMemo } from "react";
 import { DronesHero } from "../components/HeroBanner.jsx";
 import Footer from "../components/Footer.jsx";
 import Navbar from "../components/Navbar.jsx";
-import TopNavbar from "../components/TopNavbar.jsx";
 import { API_URL } from "../Utils/config.js";
 import { useToast } from "../hooks/useToast.js";
 
@@ -24,7 +23,7 @@ const DroneSection = () => {
 
   useEffect(() => {
     axios
-      .get(`${API_URL}/products`)
+      .get(`${API_URL}/products?limit=0`)
       .then((res) => {
         const droneOnly = res.data.filter(
           (item) => item.type && item.type.toLowerCase() === "drone",
@@ -110,8 +109,7 @@ const DroneSection = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <TopNavbar />
-      <Navbar />
+<Navbar />
       <div className="container mx-auto px-4 py-8">
         <DronesHero />
       </div>

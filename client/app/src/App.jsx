@@ -27,6 +27,7 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import TrackOrder from "./pages/TrackOrder.jsx";
 import Compare from "./pages/Compare.jsx";
+import TopNavbar from "./components/TopNavbar.jsx";
 
 function App() {
   const dispatch = useDispatch();
@@ -42,6 +43,7 @@ function App() {
 
   return (
     <Router>
+      <TopNavbar />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/google-callback" element={<GoogleCallback />} />

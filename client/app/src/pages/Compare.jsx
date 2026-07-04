@@ -4,7 +4,6 @@ import { removeFromCompare, clearCompare } from '../Store/compareSlice.js';
 import { addToCart } from '../Store/cartSlice.js';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar.jsx';
-import TopNavbar from '../components/TopNavbar.jsx';
 import Footer from '../components/Footer.jsx';
 import { useToast } from '../hooks/useToast.js';
 import { FaTrash, FaShoppingCart, FaBalanceScale } from 'react-icons/fa';
@@ -62,8 +61,7 @@ const Compare = () => {
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        <TopNavbar />
-        <Navbar />
+<Navbar />
         <main className="flex-1 flex flex-col items-center justify-center py-24 px-4">
           <div className="bg-white rounded-3xl shadow-lg p-12 text-center max-w-md w-full">
             <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -88,8 +86,7 @@ const Compare = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <TopNavbar />
-      <Navbar />
+<Navbar />
 
       <main className="flex-1 container mx-auto px-4 py-10 max-w-7xl">
         {/* Header */}

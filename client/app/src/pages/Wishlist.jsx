@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { removeFromWishlist, clearWishlist} from '../Store/wishlistSlice.js';
 import { addToCart } from '../Store/cartSlice.js';
 import { FaHeart, FaTrash, FaShoppingCart, FaArrowLeft } from 'react-icons/fa';
-
+import Navbar from "../components/Navbar.jsx";
 const Wishlist = () => {
   const dispatch = useDispatch();
   const wishlistItems = useSelector((state) => state.wishlist.items);
@@ -56,7 +56,9 @@ const Wishlist = () => {
   
   if (wishlistItems.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <>
+<Navbar />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <FaHeart className="text-6xl text-gray-300 mx-auto mb-4" />
           <h2 className="text-2xl font-semibold text-gray-700 mb-2">Your wishlist is empty</h2>
@@ -69,11 +71,14 @@ const Wishlist = () => {
           </button>
         </div>
       </div>
+      </>
     );
   }
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+<Navbar />
+      <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
@@ -183,6 +188,7 @@ const Wishlist = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

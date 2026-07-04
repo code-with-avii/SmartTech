@@ -72,13 +72,18 @@ app.get("/products", async (req, res) => {
       ];
     }
 
-    const limit = Number (req.query.limit) || 8;
+    // Determine limit: if a positive number is provided, use it; otherwise fetch all.
+    const limitParam = req.query.limit;
+    const limitNumber = Number(limitParam);
+    const applyLimit = limitParam && limitNumber > 0;
 
-    const products = await Product.find(filter)
+    let query = Product.find(filter)
       .populate("category", "name")
-      .select("name price image rating brand category variants discount featured")
-      .limit(limit)
-      .lean();
+      .select("name price image rating brand category variants discount featured type");
+    if (applyLimit) {
+      query = query.limit(limitNumber);
+    }
+    const products = await query.lean();
     return res.json(products);
   } catch (error) {
     console.error("Products Error:", error);

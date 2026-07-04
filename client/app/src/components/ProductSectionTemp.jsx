@@ -45,7 +45,7 @@ const ProductSection = ({ type, title }) => {
 
   useEffect(() => {
     axios
-      .get(`${API_URL}/products`)
+      .get(`${API_URL}/products?limit=0`)
       .then((res) => {
         // Filter by category type
         const filteredProducts = res.data.filter(

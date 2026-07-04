@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import TopNavbar from "../components/TopNavbar.jsx";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 import { useSelector, useDispatch } from "react-redux";
@@ -50,8 +49,7 @@ const Cart = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      <TopNavbar />
-      <Navbar />
+<Navbar />
 
       <main className="grow container mx-auto px-4 py-8 max-w-6xl">
         <div className="flex items-center justify-between mb-8">

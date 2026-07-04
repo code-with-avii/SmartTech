@@ -124,7 +124,7 @@ const Profile = () => {
 
   return (
     <>
-      <Navbar />
+<Navbar />
 
       <div className="min-h-screen bg-gray-50 flex gap-6 p-6">
         {/* Sidebar */}
