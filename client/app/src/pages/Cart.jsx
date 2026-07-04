@@ -1,12 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import TopNavbar from "../components/TopNavbar.jsx";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 import { useSelector, useDispatch } from "react-redux";
 import {increaseQuantity,decreaseQuantity,removeFromCart,clearCart,} from "../Store/cartSlice";
-import {FaTrash, FaPlus,FaMinus,FaArrowRight,FaShoppingBag,} from "react-icons/fa";
+import {FaTrash, FaPlus,FaMinus,FaArrowRight,FaShoppingBag,FaTag} from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "../hooks/useToast.js";
+
+const COUPONS = {
+  SUMMER10: { discount: 0.10, label: '10% off — Summer Sale' },
+  SMART20:  { discount: 0.20, label: '20% off — SmartTech Exclusive' },
+  FLAT500:  { discount: 500,  label: 'Flat ₹500 off', flat: true },
+};
 
 const Cart = () => {
   const { items } = useSelector((state) => state.cart);
@@ -14,13 +20,33 @@ const Cart = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  const total = items.reduce(
-    (acc, item) => {
-      const quantity = item.quantity || 1;
-      return acc + (item.price * quantity);
-    },
-    0,
-  );
+  const [couponCode, setCouponCode] = useState('');
+  const [couponApplied, setCouponApplied] = useState(null); // null or coupon key
+  const [couponError, setCouponError] = useState('');
+
+  const subtotal = items.reduce((acc, item) => acc + (item.price * (item.quantity || 1)), 0);
+  const tax = subtotal * 0.18;
+
+  const discountAmount = (() => {
+    if (!couponApplied || !COUPONS[couponApplied]) return 0;
+    const coupon = COUPONS[couponApplied];
+    if (coupon.flat) return Math.min(coupon.discount, subtotal);
+    return subtotal * coupon.discount;
+  })();
+
+  const total = subtotal + tax - discountAmount;
+
+  const handleApplyCoupon = () => {
+    const code = couponCode.trim().toUpperCase();
+    if (COUPONS[code]) {
+      setCouponApplied(code);
+      setCouponError('');
+      showToast(`Coupon "${code}" applied! ${COUPONS[code].label}`);
+    } else {
+      setCouponApplied(null);
+      setCouponError('Invalid coupon code. Try SUMMER10, SMART20, or FLAT500.');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -79,6 +105,16 @@ const Cart = () => {
                       <h3 className="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">
                         {item.name}
                       </h3>
+                      {(item.selectedVariant?.color || item.selectedVariant?.size || item.selectedVariant?.storage) && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {item.selectedVariant?.color && (
+                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{item.selectedVariant.color}</span>
+                          )}
+                          {(item.selectedVariant?.size || item.selectedVariant?.storage) && (
+                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{item.selectedVariant?.size || item.selectedVariant?.storage}</span>
+                          )}
+                        </div>
+                      )}
                       <p className="text-indigo-600 font-semibold mt-1">
                         ₹{item.price.toLocaleString("en-IN")}
                       </p>
@@ -144,22 +180,61 @@ const Cart = () => {
                 <h2 className="text-xl font-bold text-gray-900 mb-6">
                   Order Summary
                 </h2>
+                
+                {/* Coupon Code */}
+                <div className="mb-4">
+                  <label className="text-sm font-semibold text-gray-700 block mb-2 flex items-center gap-2">
+                    <FaTag className="text-indigo-500" /> Coupon Code
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={e => { setCouponCode(e.target.value); setCouponError(''); }}
+                      onKeyDown={e => e.key === 'Enter' && handleApplyCoupon()}
+                      placeholder="e.g. SUMMER10"
+                      className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                  {couponError && <p className="text-xs text-red-500 mt-1">{couponError}</p>}
+                  {couponApplied && (
+                    <div className="flex items-center justify-between mt-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                      <span className="text-xs text-green-700 font-medium">✓ {COUPONS[couponApplied].label}</span>
+                      <button
+                        onClick={() => { setCouponApplied(null); setCouponCode(''); }}
+                        className="text-xs text-red-500 hover:text-red-700 font-semibold"
+                      >Remove</button>
+                    </div>
+                  )}
+                </div>
 
                 <div className="space-y-4 text-gray-600 font-medium">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
                     <span className="text-gray-900 font-bold">
-                      ₹{total.toLocaleString("en-IN")}
+                      ₹{subtotal.toLocaleString("en-IN")}
                     </span>
                   </div>
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount ({couponApplied})</span>
+                      <span className="font-bold">-₹{discountAmount.toLocaleString("en-IN", {maximumFractionDigits:0})}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span>Shipping Estimate</span>
                     <span className="text-green-600 font-bold">Free</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Tax Estimate</span>
+                    <span>Tax (18% GST)</span>
                     <span className="text-gray-900 font-bold">
-                      ₹{(total * 0.18).toLocaleString("en-IN")}
+                      ₹{tax.toLocaleString("en-IN", {maximumFractionDigits:0})}
                     </span>
                   </div>
 
@@ -169,7 +244,7 @@ const Cart = () => {
                         Total
                       </span>
                       <span className="text-2xl font-extrabold text-indigo-600">
-                        ₹{(total + total * 0.18).toLocaleString("en-IN")}
+                        ₹{total.toLocaleString("en-IN", {maximumFractionDigits:0})}
                       </span>
                     </div>
                     <p className="text-xs text-gray-400 mt-1">Including GST</p>
@@ -182,7 +257,7 @@ const Cart = () => {
                       showToast("Your cart is empty. Add items before checkout.", "error");
                       return;
                     }
-                    navigate("/razorpay-payment");
+                    navigate("/razorpay-payment", { state: { discountAmount: Math.round(discountAmount), couponCode: couponApplied } });
                   }}
                   className="w-full mt-8 bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg flex justify-center items-center gap-2 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transform transition-all duration-300 active:scale-[0.98]"
                 >

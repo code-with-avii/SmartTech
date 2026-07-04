@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { clearCart } from "../Store/cartSlice.js";
 import { API_URL } from "../Utils/config.js";
 import { useToast } from "../hooks/useToast.js";
@@ -27,6 +27,7 @@ const loadRazorpayScript = () =>
 const RazorpayPayment = () => {
   
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const { items } = useSelector((state) => state.cart);
   const { showToast } = useToast();
@@ -37,10 +38,38 @@ const RazorpayPayment = () => {
   const [lastOrderId, setLastOrderId] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("Pending");
 
+  // Address book state
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [loadingAddresses, setLoadingAddresses] = useState(true);
+
+  // Get discount from cart navigation state
+  const discountFromCart = location.state?.discountAmount || 0;
+  const couponCodeFromCart = location.state?.couponCode || null;
+
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      try {
+        const token = getAccessToken();
+        if (!token) return;
+        const res = await axios.get(`${API_URL}/api/auth/addresses`, {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
+        });
+        setAddresses(res.data || []);
+        if (res.data?.length > 0) setSelectedAddressId(res.data[0]._id || res.data[0].id);
+      } catch { /* not critical */ }
+      finally { setLoadingAddresses(false); }
+    };
+    fetchAddresses();
+  }, []);
+
+  const selectedAddress = addresses.find(a => (a._id || a.id) === selectedAddressId) || null;
+
+  const subtotal = useMemo(() => items.reduce((acc, item) => acc + item.price * (item.quantity || 1), 0), [items]);
   const totalAmount = useMemo(() => {
-    const subtotal = items.reduce((acc, item) => acc + item.price * (item.quantity || 1), 0);
-    return Number((subtotal * 1.18).toFixed(2));
-  }, [items]);
+    return Number(((subtotal - discountFromCart) * 1.18).toFixed(2));
+  }, [subtotal, discountFromCart]);
 
   const getAccessToken = () => {
     const rawToken = localStorage.getItem("accessToken");
@@ -157,11 +186,15 @@ const RazorpayPayment = () => {
           `${API_BASE_URL}/create-order`,
           {
             amount: totalAmount,
+            discountAmount: discountFromCart,
+            shippingAddress: selectedAddress || null,
             items: items.map((item) => ({
               productId: item.productId,
               quantity: item.quantity || 1,
               name: item.name,
               price: item.price,
+              color: item.selectedVariant?.color,
+              size: item.selectedVariant?.size || item.selectedVariant?.storage,
             })),
           },
           {
@@ -258,10 +291,67 @@ const RazorpayPayment = () => {
         <h1 className="text-2xl font-bold text-gray-900">Checkout Payment</h1>
         <p className="text-gray-600 mt-2">Pay securely with Razorpay.</p>
 
+        {/* Shipping Address Selector */}
+        <div className="mt-6">
+          <h2 className="text-base font-semibold text-gray-800 mb-3">Shipping Address</h2>
+          {loadingAddresses ? (
+            <div className="text-sm text-gray-400 py-3">Loading addresses...</div>
+          ) : addresses.length === 0 ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700">
+              No saved addresses found.
+              <button onClick={() => navigate('/profile')} className="ml-2 underline font-medium hover:text-amber-900">Add one in Profile →</button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {addresses.map((addr) => {
+                const addrId = addr._id || addr.id;
+                return (
+                  <label
+                    key={addrId}
+                    className={`flex items-start gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all ${
+                      selectedAddressId === addrId
+                        ? 'border-indigo-500 bg-indigo-50'
+                        : 'border-gray-200 hover:border-indigo-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="address"
+                      checked={selectedAddressId === addrId}
+                      onChange={() => setSelectedAddressId(addrId)}
+                      className="mt-1 accent-indigo-600"
+                    />
+                    <div className="text-sm">
+                      <p className="font-semibold text-gray-900">{addr.fullName}</p>
+                      <p className="text-gray-600">{addr.addressLine1}{addr.addressLine2 ? `, ${addr.addressLine2}` : ''}</p>
+                      <p className="text-gray-600">{addr.city}, {addr.state} — {addr.pinCode}</p>
+                      {addr.phone && <p className="text-gray-500 text-xs mt-0.5">📞 {addr.phone}</p>}
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         <div className="mt-6 rounded-xl bg-gray-50 border border-gray-100 p-4">
           <div className="flex justify-between text-gray-700">
-            <span>Amount payable</span>
-            <span className="font-bold text-indigo-600">₹{totalAmount.toLocaleString("en-IN")}</span>
+            <span>Subtotal</span>
+            <span className="font-semibold">₹{subtotal.toLocaleString('en-IN')}</span>
+          </div>
+          {discountFromCart > 0 && (
+            <div className="flex justify-between text-green-600 mt-1 text-sm">
+              <span>Discount {couponCodeFromCart ? `(${couponCodeFromCart})` : ''}</span>
+              <span className="font-semibold">-₹{discountFromCart.toLocaleString('en-IN')}</span>
+            </div>
+          )}
+          <div className="flex justify-between text-gray-700 mt-1 text-sm">
+            <span>GST (18%)</span>
+            <span>₹{((subtotal - discountFromCart) * 0.18).toLocaleString('en-IN', {maximumFractionDigits:0})}</span>
+          </div>
+          <div className="border-t border-gray-200 mt-3 pt-3 flex justify-between text-gray-900">
+            <span className="font-semibold">Total Payable</span>
+            <span className="font-bold text-indigo-600 text-lg">₹{totalAmount.toLocaleString("en-IN")}</span>
           </div>
           <div className="flex justify-between mt-2 text-sm text-gray-500">
             <span>Status</span>

@@ -43,6 +43,19 @@ const paymentSchema = new Schema(
       type: String,
       default: null,
     },
+    discountAmount: {
+      type: Number,
+      default: 0,
+    },
+    shippingAddress: {
+        fullName: String,
+        phone: String,
+        address: String,
+        city: String,
+        state: String,
+        country: String,
+        postalCode: String,
+    },
     cartItems: [
       {
         productId: {
@@ -53,6 +66,11 @@ const paymentSchema = new Schema(
         quantity: { type: Number, required: true, default: 1 },
         name: String,
         price: Number,
+        image: String,
+        variant: {
+          color: String,
+          storage: String,
+        },
       },
     ],
   },

@@ -196,6 +196,36 @@ app.get("/api/admin/stats", verifyAccessToken, isAdmin, async (req, res) => {
     ]);
     const revenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
 
+    const monthlyRevenueData = await Order.aggregate([
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+          },
+          revenue: { $sum: "$totalAmount" },
+        },
+      },
+    ]);
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthlyRevenue = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const year = d.getFullYear();
+      const month = d.getMonth() + 1;
+      const monthName = monthNames[d.getMonth()];
+      
+      const found = monthlyRevenueData.find(
+        (r) => r._id.year === year && r._id.month === month
+      );
+      monthlyRevenue.push({
+        label: monthName,
+        revenue: found ? found.revenue : 0,
+      });
+    }
+
     const recentUsers = await User.find()
       .sort({ createdAt: -1 })
       .limit(5)
@@ -212,6 +242,7 @@ app.get("/api/admin/stats", verifyAccessToken, isAdmin, async (req, res) => {
       revenue,
       recentUsers,
       recentOrders,
+      monthlyRevenue,
     });
   } catch (error) {
     console.error(error);

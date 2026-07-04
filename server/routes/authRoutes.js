@@ -1,9 +1,13 @@
-import express, { Router } from "express";
+import express from "express";
 import {
   Signup,
   Login,
   LogoutUser,
   RefreshUser,
+  getUserAddresses,
+  addAddress,
+  updateAddress,
+  deleteAddress,
 } from "../controllers/controllers-users.js";
 import verifyAccessToken from "../middleware/authmiddleware.js";
 import passport from "passport";
@@ -18,6 +22,12 @@ authrouter.post("/signup", Signup);
 authrouter.post("/login", Login);
 authrouter.post("/logout", verifyAccessToken, LogoutUser);
 authrouter.post("/refresh", RefreshUser);
+
+// Addresses routes
+authrouter.get("/addresses", verifyAccessToken, getUserAddresses);
+authrouter.post("/addresses", verifyAccessToken, addAddress);
+authrouter.put("/addresses/:addressId", verifyAccessToken, updateAddress);
+authrouter.delete("/addresses/:addressId", verifyAccessToken, deleteAddress);
 authrouter.get(
   "/google",
   passport.authenticate("google", {

@@ -3,6 +3,7 @@ import Razorpay from "razorpay";
 import Payment from "../models/payment.js";
 import Order from "../models/order.js";
 import User from "../models/users.js";
+import Product from "../models/product.js";
 import { sendOrderConfirmationEmail } from "../utils/emailService.js";
 
 const CURRENCY = "INR";
@@ -36,7 +37,7 @@ const getReadableError = (error, fallback) => {
 
 export const createOrder = async (req, res) => {
   try {
-    const { amount, items } = req.body;
+    const { amount, items, discountAmount, shippingAddress } = req.body;
     const normalizedAmount = Number(amount);
 
     if (!Number.isFinite(normalizedAmount) || normalizedAmount <= 0) {
@@ -52,6 +53,8 @@ export const createOrder = async (req, res) => {
       quantity: item.quantity || 1,
       name: item.name,
       price: item.price,
+      image: item.image,
+      variant: item.variant,
     }));
 
     const amountInPaise = toPaise(normalizedAmount);
@@ -70,6 +73,8 @@ export const createOrder = async (req, res) => {
       currency: order.currency,
       status: "Pending",
       cartItems,
+      discountAmount: Number(discountAmount) || 0,
+      shippingAddress,
     });
 
     return res.status(201).json({
@@ -138,11 +143,45 @@ export const verifyPayment = async (req, res) => {
         products: payment.cartItems.map((item) => ({
           product: item.productId,
           quantity: item.quantity,
+          name: item.name,
+          price: item.price,
+          image: item.image,
+          variant: item.variant ? {
+            color: item.variant.color,
+            storage: item.variant.storage,
+          } : undefined,
         })),
         totalAmount: payment.amount,
+        discountAmount: payment.discountAmount || 0,
+        shippingAddress: payment.shippingAddress,
         status: "Processing",
         razorpayOrderId: razorpay_order_id,
       });
+
+      // Deduct stock of variants
+      for (const item of payment.cartItems) {
+        try {
+          const product = await Product.findById(item.productId);
+          if (product && product.variants && product.variants.length > 0) {
+            let variantIndex = -1;
+            if (item.variant) {
+              variantIndex = product.variants.findIndex(
+                v => 
+                  (!item.variant.color || v.color === item.variant.color) &&
+                  (!item.variant.storage || v.size === item.variant.storage)
+              );
+            }
+            if (variantIndex === -1) {
+              variantIndex = 0;
+            }
+            const countInStock = product.variants[variantIndex].countInStock || 0;
+            product.variants[variantIndex].countInStock = Math.max(0, countInStock - item.quantity);
+            await product.save();
+          }
+        } catch (stockErr) {
+          console.error("Deduct stock error for product:", item.productId, stockErr);
+        }
+      }
 
       try {
         const user = await User.findById(req.user.userId);

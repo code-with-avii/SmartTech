@@ -26,6 +26,7 @@ import SearchResults from "./pages/SearchResults.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import TrackOrder from "./pages/TrackOrder.jsx";
+import Compare from "./pages/Compare.jsx";
 
 function App() {
   const dispatch = useDispatch();
@@ -65,6 +66,7 @@ function App() {
         <Route path="/product/:id" element={<ProductDetail/>}/>
         <Route path="/razorpay-payment" element={<ProtectedRoute><RazorpayPayment /></ProtectedRoute>} />
         <Route path="/track-order" element={<TrackOrder />} />
+        <Route path="/compare" element={<Compare />} />
       </Routes>
     </Router>
   );

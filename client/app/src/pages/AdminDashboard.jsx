@@ -17,6 +17,7 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [allOrders, setAllOrders] = useState([]);
   const [error, setError] = useState("");
   // Forms
   const [newCatName, setNewCatName] = useState("");
@@ -67,6 +68,25 @@ const AdminDashboard = () => {
     }
   }, [apiOptions]);
 
+  const fetchAllOrders = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/orders/admin/orders`, apiOptions);
+      setAllOrders(res.data || []);
+    } catch (err) {
+      console.error('Failed to fetch orders', err);
+    }
+  }, [apiOptions]);
+
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    try {
+      await axios.put(`${API_URL}/api/orders/${orderId}/status`, { status: newStatus }, apiOptions);
+      showToast(`Order status updated to ${newStatus}`);
+      setAllOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: newStatus } : o));
+    } catch {
+      showToast('Failed to update order status', 'error');
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await axios.post(
@@ -98,15 +118,17 @@ const AdminDashboard = () => {
 
     (async () => {
       try {
-        const [statsRes, productsRes, categoriesRes] = await Promise.all([
+        const [statsRes, productsRes, categoriesRes, ordersRes] = await Promise.all([
           axios.get(`${API_URL}/api/admin/stats`, apiOptions),
           axios.get(`${API_URL}/products`),
           axios.get(`${API_URL}/categories`, apiOptions),
+          axios.get(`${API_URL}/api/orders/admin/orders`, apiOptions),
         ]);
         if (!cancelled) {
           setStats(statsRes.data);
           setProducts(productsRes.data);
           setCategories(categoriesRes.data);
+          setAllOrders(ordersRes.data || []);
         }
       } catch (err) {
         console.error(err);
@@ -365,6 +387,68 @@ const AdminDashboard = () => {
                 </ul>
               </div>
             </div>
+
+            {/* Monthly Revenue SVG Chart */}
+            {stats.monthlyRevenue && stats.monthlyRevenue.length > 0 && (() => {
+              const months = stats.monthlyRevenue;
+              const maxRev = Math.max(...months.map(m => m.revenue), 1);
+              const W = 600, H = 200, PAD = 40;
+              const barW = (W - PAD * 2) / months.length - 8;
+              return (
+                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mt-8">
+                  <h3 className="text-xl font-bold text-gray-800 mb-6">Monthly Revenue (Last 6 Months)</h3>
+                  <div className="overflow-x-auto">
+                    <svg viewBox={`0 0 ${W} ${H + 40}`} className="w-full min-w-[400px]">
+                      {/* Y-axis gridlines */}
+                      {[0, 0.25, 0.5, 0.75, 1].map((frac) => {
+                        const y = PAD + (H - PAD) * (1 - frac);
+                        return (
+                          <g key={frac}>
+                            <line x1={PAD} y1={y} x2={W - PAD} y2={y} stroke="#f0f0f0" strokeWidth="1" />
+                            <text x={PAD - 6} y={y + 4} textAnchor="end" fontSize="10" fill="#aaa">
+                              {Math.round(maxRev * frac).toLocaleString()}
+                            </text>
+                          </g>
+                        );
+                      })}
+                      {/* Bars */}
+                      {months.map((m, i) => {
+                        const barH = ((m.revenue / maxRev) * (H - PAD)) || 2;
+                        const x = PAD + i * ((W - PAD * 2) / months.length) + 4;
+                        const y = PAD + (H - PAD) - barH;
+                        return (
+                          <g key={i}>
+                            <defs>
+                              <linearGradient id={`bar-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#6366f1" />
+                                <stop offset="100%" stopColor="#8b5cf6" />
+                              </linearGradient>
+                            </defs>
+                            <rect
+                              x={x}
+                              y={y}
+                              width={barW}
+                              height={barH}
+                              rx="4"
+                              fill={`url(#bar-grad-${i})`}
+                              opacity="0.9"
+                            />
+                            <text x={x + barW / 2} y={y - 6} textAnchor="middle" fontSize="9" fill="#6366f1" fontWeight="600">
+                              {m.revenue > 0 ? `₹${(m.revenue/1000).toFixed(1)}k` : ''}
+                            </text>
+                            <text x={x + barW / 2} y={H + PAD + 14} textAnchor="middle" fontSize="10" fill="#888">
+                              {m.month}
+                            </text>
+                          </g>
+                        );
+                      })}
+                      {/* X axis */}
+                      <line x1={PAD} y1={H} x2={W - PAD} y2={H} stroke="#e5e7eb" strokeWidth="1" />
+                    </svg>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
         <div className="flex justify-between items-center mb-4">
@@ -556,19 +640,73 @@ const AdminDashboard = () => {
           </div>
         )}
         {activeTab === "orders" && (
-          <div className="bg-white p-6 rounded-xl shadow">
-            <h2 className="text-xl font-bold mb-4">Orders</h2>
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 animate-fade-in">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">Order Management</h2>
+              <span className="text-sm text-gray-500">{allOrders.length} total orders</span>
+            </div>
 
-            {stats.recentOrders.map((order) => (
-              <div
-                key={order._id}
-                className="flex justify-between border-b py-3"
-              >
-                <span>{order.user?.name}</span>
-                <span>${order.totalAmount}</span>
-                <span className="text-blue-600">{order.status}</span>
-              </div>
-            ))}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-600 text-sm uppercase tracking-wide">
+                    <th className="px-4 py-3 font-semibold rounded-tl-lg">Order ID</th>
+                    <th className="px-4 py-3 font-semibold">Customer</th>
+                    <th className="px-4 py-3 font-semibold">Date</th>
+                    <th className="px-4 py-3 font-semibold">Amount</th>
+                    <th className="px-4 py-3 font-semibold">Items</th>
+                    <th className="px-4 py-3 font-semibold">Status</th>
+                    <th className="px-4 py-3 font-semibold rounded-tr-lg">Update Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {allOrders.map((order) => {
+                    const statusColors = {
+                      Pending: 'bg-yellow-100 text-yellow-800',
+                      Processing: 'bg-blue-100 text-blue-800',
+                      Shipped: 'bg-purple-100 text-purple-800',
+                      Delivered: 'bg-green-100 text-green-800',
+                      Cancelled: 'bg-red-100 text-red-800',
+                    };
+                    return (
+                      <tr key={order._id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3 text-xs font-mono text-gray-500">{order._id?.slice(-8)}</td>
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-gray-800">{order.user?.name || 'Unknown'}</div>
+                          <div className="text-xs text-gray-500">{order.user?.email || ''}</div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600">
+                          {new Date(order.createdAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}
+                        </td>
+                        <td className="px-4 py-3 font-bold text-gray-900">₹{order.totalAmount?.toLocaleString('en-IN')}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{order.items?.length || 0} item(s)</td>
+                        <td className="px-4 py-3">
+                          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusColors[order.status] || 'bg-gray-100 text-gray-700'}`}>
+                            {order.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <select
+                            value={order.status}
+                            onChange={(e) => handleUpdateOrderStatus(order._id, e.target.value)}
+                            className="border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white cursor-pointer"
+                          >
+                            {['Pending','Processing','Shipped','Delivered','Cancelled'].map(s => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                          </select>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {allOrders.length === 0 && (
+                    <tr>
+                      <td colSpan="7" className="px-4 py-12 text-center text-gray-400">No orders found</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

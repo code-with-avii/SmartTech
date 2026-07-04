@@ -2,6 +2,7 @@ import { configureStore,combineReducers } from '@reduxjs/toolkit';
 import cartReducer from './cartSlice.js';
 import userReducer from "./userSlice.js";
 import wishlistReducer from './wishlistSlice.js';
+import compareReducer from './compareSlice.js';
 import {persistStore,persistReducer} from "redux-persist";
 import storage from "redux-persist/lib/storage";
 
@@ -9,6 +10,7 @@ const appReducer = combineReducers({
   user: userReducer,
   cart: cartReducer,
   wishlist: wishlistReducer,
+  compare: compareReducer,
 });
 
 const rootReducer = (state, action) => {
@@ -21,7 +23,7 @@ const rootReducer = (state, action) => {
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["user", "cart", "wishlist"],
+  whitelist: ["user", "cart", "wishlist", "compare"],
 };
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 

@@ -3,17 +3,20 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import { addToCart } from '../Store/cartSlice.js';
+import { addToCompare, removeFromCompare } from '../Store/compareSlice.js';
 import Navbar from '../components/Navbar.jsx';
 import TopNavbar from '../components/TopNavbar.jsx';
 import Footer from '../components/Footer.jsx';
 import { API_URL } from "../Utils/config.js";
 import { useToast } from "../hooks/useToast.js";
+import { FaBalanceScale } from 'react-icons/fa';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const isLoggedIn = useSelector((state) => state.user.isLoggedIn);
+  const compareItems = useSelector((state) => state.compare?.items || []);
   const { showToast } = useToast();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,6 +29,8 @@ const ProductDetail = () => {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -72,11 +77,43 @@ const ProductDetail = () => {
     fetchProduct();
   }, [id]);
 
+  // Derived variant state
+  const availableColors = product ? [...new Set((product.variants || []).map(v => v.color).filter(Boolean))] : [];
+  const availableSizes = product ? [...new Set((product.variants || []).map(v => v.size || v.storage).filter(Boolean))] : [];
+
+  const selectedVariant = product?.variants?.find(v => {
+    const colorMatch = !selectedColor || v.color === selectedColor;
+    const sizeMatch = !selectedSize || v.size === selectedSize || v.storage === selectedSize;
+    return colorMatch && sizeMatch;
+  }) || null;
+
+  const isOutOfStock = product?.variants?.length > 0
+    ? (selectedVariant ? selectedVariant.countInStock === 0 : product.variants.reduce((s, v) => s + (v.countInStock || 0), 0) === 0)
+    : false;
+
+  const isInCompare = compareItems.some((item) => item._id === product?._id);
+
+  const handleToggleCompare = () => {
+    if (isInCompare) {
+      dispatch(removeFromCompare(product._id));
+      showToast('Removed from comparison');
+    } else {
+      if (compareItems.length >= 3) {
+        showToast('You can compare up to 3 products at a time.', 'error');
+        return;
+      }
+      dispatch(addToCompare(product));
+      showToast('Added to comparison');
+    }
+  };
+
   const handleAddToCart = () => {
+    if (isOutOfStock) return;
     const productToAdd = {
       ...product,
       _id: product._id,
-      quantity: quantity
+      quantity: quantity,
+      selectedVariant: selectedVariant || undefined,
     };
     dispatch(addToCart(productToAdd));
     showToast(`${product.name} added to cart!`);
@@ -258,6 +295,56 @@ const ProductDetail = () => {
               </div>
             </div>
 
+            {/* Variant Selectors */}
+            {availableColors.length > 0 && (
+              <div>
+                <span className="text-gray-700 font-medium block mb-2">Color:</span>
+                <div className="flex flex-wrap gap-2">
+                  {availableColors.map(color => (
+                    <button
+                      key={color}
+                      onClick={() => setSelectedColor(color)}
+                      className={`px-4 py-1.5 rounded-full border-2 text-sm font-medium transition-all ${
+                        selectedColor === color
+                          ? 'border-blue-600 bg-blue-50 text-blue-700'
+                          : 'border-gray-300 text-gray-600 hover:border-blue-400'
+                      }`}
+                    >
+                      {color}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {availableSizes.length > 0 && (
+              <div>
+                <span className="text-gray-700 font-medium block mb-2">Storage / Size:</span>
+                <div className="flex flex-wrap gap-2">
+                  {availableSizes.map(size => (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className={`px-4 py-1.5 rounded-full border-2 text-sm font-medium transition-all ${
+                        selectedSize === size
+                          ? 'border-purple-600 bg-purple-50 text-purple-700'
+                          : 'border-gray-300 text-gray-600 hover:border-purple-400'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Stock Status */}
+            {isOutOfStock && (
+              <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm font-medium">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/></svg>
+                This variant is currently out of stock
+              </div>
+            )}
+
             {/* Quantity and Add to Cart */}
             <div className="space-y-4">
               <div className="flex items-center space-x-4">
@@ -283,12 +370,30 @@ const ProductDetail = () => {
                 </div>
               </div>
 
-              <button
-                onClick={handleAddToCart}
-                className="w-full bg-linear-to-r from-blue-600 to-purple-600 text-white py-4 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105"
-              >
-                Add to Cart
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleAddToCart}
+                  disabled={isOutOfStock}
+                  className={`flex-1 py-4 rounded-lg font-semibold transition-all duration-300 transform ${
+                    isOutOfStock
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-linear-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 hover:scale-105'
+                  }`}
+                >
+                  {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+                </button>
+                <button
+                  onClick={handleToggleCompare}
+                  className={`px-4 py-4 rounded-lg border-2 transition-all duration-300 ${
+                    isInCompare
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : 'border-gray-300 text-gray-600 hover:border-blue-400 hover:text-blue-600'
+                  }`}
+                  title={isInCompare ? 'Remove from comparison' : 'Add to comparison'}
+                >
+                  <FaBalanceScale className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Product Features */}

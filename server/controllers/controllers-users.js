@@ -227,3 +227,98 @@ export const RefreshUser = async (req, res) => {
   }
 };
 export { Signup, Login, LogoutUser };
+
+export const getUserAddresses = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    return res.json(user.addresses || []);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const addAddress = async (req, res) => {
+  try {
+    const { fullName, phone, address, city, state, country, postalCode, isDefault } = req.body;
+    if (!fullName || !phone || !address || !city || !state || !country || !postalCode) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const user = await User.findById(req.user.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (isDefault) {
+      user.addresses.forEach(addr => addr.isDefault = false);
+    }
+
+    const isFirstAddress = user.addresses.length === 0;
+
+    user.addresses.push({
+      fullName,
+      phone,
+      address,
+      city,
+      state,
+      country,
+      postalCode,
+      isDefault: isFirstAddress || isDefault
+    });
+
+    await user.save();
+    return res.status(201).json(user.addresses);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const updateAddress = async (req, res) => {
+  try {
+    const { fullName, phone, address, city, state, country, postalCode, isDefault } = req.body;
+    const user = await User.findById(req.user.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const addr = user.addresses.find(a => String(a._id) === String(req.params.addressId));
+    if (!addr) return res.status(404).json({ message: "Address not found" });
+
+    if (isDefault) {
+      user.addresses.forEach(a => a.isDefault = false);
+    }
+
+    addr.fullName = fullName || addr.fullName;
+    addr.phone = phone || addr.phone;
+    addr.address = address || addr.address;
+    addr.city = city || addr.city;
+    addr.state = state || addr.state;
+    addr.country = country || addr.country;
+    addr.postalCode = postalCode || addr.postalCode;
+    addr.isDefault = isDefault !== undefined ? isDefault : addr.isDefault;
+
+    await user.save();
+    return res.json(user.addresses);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const deleteAddress = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.addresses = user.addresses.filter(a => String(a._id) !== String(req.params.addressId));
+    
+    if (user.addresses.length > 0 && !user.addresses.some(a => a.isDefault)) {
+      user.addresses[0].isDefault = true;
+    }
+
+    await user.save();
+    return res.json(user.addresses);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};

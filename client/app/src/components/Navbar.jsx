@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import LogoutUser from "../components/LogoutUser.jsx";
 import { Logout } from "../Store/userSlice.js";
-import { FaShoppingCart, FaUser, FaHeart, FaBox } from 'react-icons/fa';
+import { FaShoppingCart, FaUser, FaHeart, FaBox, FaBalanceScale } from 'react-icons/fa';
 import { useToast } from "../hooks/useToast.js";
 
 const Navbar = () => {
@@ -12,12 +12,14 @@ const Navbar = () => {
   const isLoggedIn = useSelector((state) => state.user.isLoggedIn);
   const cartItems = useSelector((state) => state.cart.items);
   const wishlistItems = useSelector((state) => state.wishlist.items);
+  const compareItems = useSelector((state) => state.compare?.items || []);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { showToast } = useToast();
 
   const cartItemCount = cartItems.reduce((total, item) => total + (item.quantity || 1), 0);
   const wishlistItemCount = wishlistItems.length;
+  const compareItemCount = compareItems.length;
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -56,6 +58,19 @@ const Navbar = () => {
         <div className="hidden md:block">{searchInput}</div>
 
         <div className="hidden md:flex items-center gap-5">
+          <button
+            onClick={() => navigate('/compare')}
+            className="relative p-2 text-gray-600 hover:text-green-600 transition-colors"
+            title="Compare Products"
+          >
+            <FaBalanceScale />
+            {compareItemCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {compareItemCount}
+              </span>
+            )}
+          </button>
+
           {isLoggedIn ? (
             <>
               <button
@@ -136,6 +151,12 @@ const Navbar = () => {
       >
         <div className="px-6 pb-4 flex flex-col gap-4">
           {searchInput}
+          <button
+            onClick={() => { navigate('/compare'); setOpen(false); }}
+            className="flex items-center gap-2 text-gray-600 hover:text-green-600"
+          >
+            <FaBalanceScale /> Compare ({compareItemCount})
+          </button>
           {isLoggedIn ? (
             <>
               <button
