@@ -8,6 +8,7 @@ import Footer from "../components/Footer.jsx";
 import Navbar from "../components/Navbar.jsx";
 import { API_URL } from "../Utils/config.js";
 import { useToast } from "../hooks/useToast.js";
+import CategoryMenu from "../components/CategoryMenu.jsx";
 
 const TabletSection = () => {
   const [tablets, setTablets] = useState([]);
@@ -109,7 +110,8 @@ const TabletSection = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-<Navbar />
+      <Navbar />
+      <CategoryMenu/>
       <div className="container mx-auto px-4 py-8">
         <TabletsHero />
       </div>

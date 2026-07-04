@@ -8,7 +8,7 @@ import Footer from "../components/Footer.jsx";
 import Navbar from "../components/Navbar.jsx";
 import { API_URL } from "../Utils/config.js";
 import { useToast } from "../hooks/useToast.js";
-
+import CategoryMenu from "../components/CategoryMenu.jsx"
 const DroneSection = () => {
   const [drones, setDrones] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -109,7 +109,8 @@ const DroneSection = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-<Navbar />
+      <Navbar />
+      <CategoryMenu/>
       <div className="container mx-auto px-4 py-8">
         <DronesHero />
       </div>
