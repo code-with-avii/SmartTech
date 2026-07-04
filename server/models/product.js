@@ -40,8 +40,7 @@ const productSchema = new Schema(
                 name: { type: String, required: true },
                 rating: { type: Number, required: true },
                 comment: { type: String, required: true },
-                createdAt: { type: Date, default: Date.now },
-                index: true,
+                createdAt: { type: Date, default: Date.now }
             }
         ],
         rating: { 
