@@ -5,20 +5,23 @@ const productSchema = new Schema(
         name:{
             type:String,
             required:true,
+            index: true,
         },
         type:{
             type:String,
             required:true,
             enum:["Mobile","Laptop","Tablet","Watch","Audio","Accessories","Drone","Camera"],
-            default:"Mobile"
+            default:"Mobile",
         },
         price:{
             type:Number,
             required:true,
             default:null,
+            index: true,
         },
         brand:{
             type:String,
+            index: true,
         },
         image:String,
         description:{
@@ -28,7 +31,8 @@ const productSchema = new Schema(
         category:{
             type: mongoose.Schema.Types.ObjectId,
             ref: "Category",
-            default: null
+            default: null,
+            index: true,
         },
         reviews: [
             {
@@ -37,15 +41,28 @@ const productSchema = new Schema(
                 rating: { type: Number, required: true },
                 comment: { type: String, required: true },
                 createdAt: { type: Date, default: Date.now },
+                index: true,
             }
         ],
-        rating: { type: Number, required: true, default: 0 },
-        numReviews: { type: Number, required: true, default: 0 },
+        rating: { 
+            type: Number, 
+            required: true, 
+            default: 0,
+            index: true,
+            },
+        numReviews: { 
+            type: Number,
+            required: true, 
+            default: 0,
+            index: true,
+        },
         variants: [
             {
                 size: { type: String },
                 color: { type: String },
-                countInStock: { type: Number, required: true, default: 0 },
+                countInStock: { type: Number, required: true, default: 0,
+                index: true,
+                },
             }
         ],
     },

@@ -1,11 +1,10 @@
 import express from "express";
 import cors from "cors";
-import helmet from "helmet"
-import rateLimit from "express-rate-limit"
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 dotenv.config();
-
-
+import compression from "compression";
 import Product from "./models/product.js";
 import Category from "./models/category.js";
 import Order from "./models/order.js";
@@ -16,32 +15,41 @@ import { handlePaymentWebhook } from "./controllers/paymentController.js";
 import { addProductReview } from "./controllers/reviewController.js";
 import hpp from "hpp";
 
-
 const app = express();
-app.use(helmet())
-app.use(cors({
-  origin: function (origin, callback) {
-    const allowedOrigins = [
-
-      "https://smart-tech-gold.vercel.app",
-      process.env.CLIENT_URL
-    ];
-    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-}));
+app.use(helmet());
+app.use(compression());
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      const allowedOrigins = [
+        "https://smart-tech-gold.vercel.app",
+        process.env.CLIENT_URL,
+      ];
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app")
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  }),
+);
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit:100,
-})
+  limit: 100,
+});
 app.use(limiter);
-app.use(hpp())
-app.post("/api/payments/webhook", express.raw({ type: "application/json" }), handlePaymentWebhook);
+app.use(hpp());
+app.post(
+  "/api/payments/webhook",
+  express.raw({ type: "application/json" }),
+  handlePaymentWebhook,
+);
 app.use(express.json());
 app.use(cookieParser());
 
@@ -64,7 +72,13 @@ app.get("/products", async (req, res) => {
       ];
     }
 
-    const products = await Product.find(filter).populate("category", "name");
+    const limit = Number (req.query.limit) || 8;
+
+    const products = await Product.find(filter)
+      .populate("category", "name")
+      .select("name price image rating brand category variants discount featured")
+      .limit(limit)
+      .lean();
     return res.json(products);
   } catch (error) {
     console.error("Products Error:", error);
@@ -74,7 +88,10 @@ app.get("/products", async (req, res) => {
 
 app.get("/products/:id", async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).populate("category", "name");
+    const product = await Product.findById(req.params.id).populate(
+      "category",
+      "name",
+    );
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
@@ -113,8 +130,15 @@ app.put("/products/:id", verifyAccessToken, isAdmin, async (req, res) => {
   try {
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
-      { price, name, image, description, category: category || null, type: type || "Mobile" },
-      { new: true }
+      {
+        price,
+        name,
+        image,
+        description,
+        category: category || null,
+        type: type || "Mobile",
+      },
+      { new: true },
     ).populate("category", "name");
     res.json({ message: "Product updated", product: updatedProduct });
   } catch (error) {
@@ -168,12 +192,18 @@ app.get("/api/admin/stats", verifyAccessToken, isAdmin, async (req, res) => {
 
     // Calculate total revenue from Orders
     const revenueResult = await Order.aggregate([
-      { $group: { _id: null, total: { $sum: "$totalAmount" } } }
+      { $group: { _id: null, total: { $sum: "$totalAmount" } } },
     ]);
     const revenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
 
-    const recentUsers = await User.find().sort({ createdAt: -1 }).limit(5).select("-password -refreshToken");
-    const recentOrders = await Order.find().sort({ createdAt: -1 }).limit(5).populate("user", "name email");
+    const recentUsers = await User.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select("-password -refreshToken");
+    const recentOrders = await Order.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate("user", "name email");
 
     res.json({
       userCount,
@@ -181,7 +211,7 @@ app.get("/api/admin/stats", verifyAccessToken, isAdmin, async (req, res) => {
       orderCount,
       revenue,
       recentUsers,
-      recentOrders
+      recentOrders,
     });
   } catch (error) {
     console.error(error);
