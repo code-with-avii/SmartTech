@@ -1,6 +1,12 @@
-import React, { useState } from "react";
-import { FaBox, FaMoneyBill, FaUndo, FaUser, FaChevronDown } from "react-icons/fa";
-
+import React, { useState, axios } from "react";
+import {
+  FaBox,
+  FaMoneyBill,
+  FaUndo,
+  FaUser,
+  FaChevronDown,
+} from "react-icons/fa";
+import { API_URL } from "../Utils/config";
 const HelpCenter = () => {
   const [search, setSearch] = useState("");
   const [openIndex, setOpenIndex] = useState(null);
@@ -23,7 +29,17 @@ const HelpCenter = () => {
       answer: "Refunds are processed within 5-7 business days.",
     },
   ];
-
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
   const categories = [
     { name: "Orders", icon: <FaBox /> },
     { name: "Payments", icon: <FaMoneyBill /> },
@@ -32,12 +48,28 @@ const HelpCenter = () => {
   ];
 
   const filteredFAQs = faqs.filter((faq) =>
-    faq.question.toLowerCase().includes(search.toLowerCase())
+    faq.question.toLowerCase().includes(search.toLowerCase()),
   );
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    try {
+      axios.post(`${API_URL}/support`, formData);
+
+      alert("Support ticket submitted!");
+
+      setFormData({
+        name: "",
+        email: "",
+        message: "",
+      });
+    } catch (err) {
+      alert("Something went wrong");
+    }
+  };
   return (
     <div className="min-h-screen bg-gray-50">
-
       {/* HERO SECTION */}
       <div className="bg-linear-to-r from-blue-600 to-purple-600 text-white py-16 px-6 text-center">
         <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -54,7 +86,6 @@ const HelpCenter = () => {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-10">
-
         {/* CATEGORIES */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
           {categories.map((cat, i) => (
@@ -78,14 +109,10 @@ const HelpCenter = () => {
             <div
               key={index}
               className="border-b last:border-none py-4 cursor-pointer"
-              onClick={() =>
-                setOpenIndex(openIndex === index ? null : index)
-              }
+              onClick={() => setOpenIndex(openIndex === index ? null : index)}
             >
               <div className="flex justify-between items-center">
-                <h3 className="font-medium text-gray-800">
-                  {faq.question}
-                </h3>
+                <h3 className="font-medium text-gray-800">{faq.question}</h3>
                 <FaChevronDown
                   className={`transition-transform ${
                     openIndex === index ? "rotate-180" : ""
@@ -94,9 +121,7 @@ const HelpCenter = () => {
               </div>
 
               {openIndex === index && (
-                <p className="text-gray-600 mt-3 text-sm">
-                  {faq.answer}
-                </p>
+                <p className="text-gray-600 mt-3 text-sm">{faq.answer}</p>
               )}
             </div>
           ))}
@@ -107,26 +132,36 @@ const HelpCenter = () => {
           <h2 className="text-2xl font-bold mb-6">Still need help?</h2>
 
           <div className="grid md:grid-cols-2 gap-6">
-
             {/* FORM */}
-            <form className="flex flex-col gap-4">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <input
-                type="text"
+                type="name"
+                value={formData.name}
+                onChange={handleChange}
+                required={true}
                 placeholder="Your Name"
                 className="border p-3 rounded-lg"
               />
               <input
                 type="email"
+                value={formData.email}
+                onChange={handleChange}
                 placeholder="Your Email"
+                required={true}
                 className="border p-3 rounded-lg"
               />
               <textarea
                 placeholder="Describe your issue..."
+                value={formData.message}
+                onChange={handleChange}
                 rows="4"
                 className="border p-3 rounded-lg"
               ></textarea>
 
-              <button className="bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition">
+              <button
+                className="bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition"
+                type="submit"
+              >
                 Submit Ticket
               </button>
             </form>
@@ -134,19 +169,20 @@ const HelpCenter = () => {
             {/* SUPPORT INFO */}
             <div className="flex flex-col justify-center gap-4">
               <div className="p-4 bg-gray-100 rounded-lg">
-                📞 Call Us: <b>+91 </b>
+                📞 Call Us: +91 98765 43210
               </div>
               <div className="p-4 bg-gray-100 rounded-lg">
-                💬 Live Chat: Available 24/7
+                📧 support@yourstore.com
               </div>
               <div className="p-4 bg-gray-100 rounded-lg">
-                📧 Email: support@yourstore.com
+🕒 Support Hours: Mon–Sat, 9 AM–8 PM
+              </div>
+              <div className="p-4 bg-gray-100 rounded-lg">💬 Live Chat: 24/7
+
               </div>
             </div>
-
           </div>
         </div>
-
       </div>
     </div>
   );

@@ -109,7 +109,7 @@ const TabletSection = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100">
       <Navbar />
       <CategoryMenu/>
       <div className="container mx-auto px-4 py-8">
@@ -198,7 +198,7 @@ const TabletSection = () => {
                 setSearch("");
                 setSort("");
               }}
-              className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-6 py-2 rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-105"
+              className="bg-linear-to-r from-red-500 to-pink-500 text-white px-6 py-2 rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-105"
             >
               Clear All Filters
             </button>
@@ -213,7 +213,7 @@ const TabletSection = () => {
               className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden group"
             >
               {/* Product Image */}
-              <div className="relative overflow-hidden h-64 bg-gradient-to-br from-blue-50 to-indigo-50">
+              <div className="relative overflow-hidden h-64 bg-linear-to-br from-blue-50 to-indigo-50">
                 <img
                   src={tablet.image || "/placeholder-tablet.jpg"}
                   alt={tablet.name}
@@ -283,7 +283,7 @@ const TabletSection = () => {
                 <div className="flex gap-3">
                   <button
                     onClick={() => handleAddtoCart(tablet)}
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-4 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105 font-semibold"
+                    className="flex-1 bg-linear-to-r from-blue-500 to-indigo-600 text-white py-3 px-4 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105 font-semibold"
                   >
                     Add to Cart
                   </button>

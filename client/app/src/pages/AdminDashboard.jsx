@@ -398,7 +398,7 @@ const AdminDashboard = () => {
                 <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mt-8">
                   <h3 className="text-xl font-bold text-gray-800 mb-6">Monthly Revenue (Last 6 Months)</h3>
                   <div className="overflow-x-auto">
-                    <svg viewBox={`0 0 ${W} ${H + 40}`} className="w-full min-w-[400px]">
+                    <svg viewBox={`0 0 ${W} ${H + 40}`} className="w-full min-w-100">
                       {/* Y-axis gridlines */}
                       {[0, 0.25, 0.5, 0.75, 1].map((frac) => {
                         const y = PAD + (H - PAD) * (1 - frac);
