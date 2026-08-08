@@ -2,14 +2,14 @@ const isProduction = process.env.NODE_ENV === "production" || process.env.NODE_E
 
 export const accessCookieOptions = {
   httpOnly: true,
-  secure: isProduction,
-  sameSite: isProduction ? "none" : "lax",
+  secure: true,
+  sameSite: "none",
   maxAge: 15 * 60 * 1000,
 };
 
 export const refreshCookieOptions = {
   httpOnly: true,
-  secure: isProduction,
-  sameSite: isProduction ? "none" : "lax",
+  secure: true,
+  sameSite: "none",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
