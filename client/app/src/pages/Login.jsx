@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../Utils/api.js";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -18,11 +18,7 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const res = await axios.post(
-        `${API_URL}/api/auth/login`,
-        { email, password },
-        { withCredentials: true },
-      );
+      const res = await api.post("/api/auth/login", { email, password });
 
       const userPayload = {
         email: res.data.user.email,

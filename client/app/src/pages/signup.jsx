@@ -1,7 +1,6 @@
-import axios from "axios";
+import api from "../Utils/api.js";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { API_URL } from "../Utils/config.js";
 import { useToast } from "../hooks/useToast.js";
 
 const SignUp = () => {
@@ -18,15 +17,11 @@ const SignUp = () => {
     e.preventDefault(); // prevent reload
 
     try {
-      const res = await axios.post(
-        `${API_URL}/api/auth/signup`,
-        {
-          email,
-          password,
-          name,
-        },
-        { withCredentials: true },
-      );
+      const res = await api.post("/api/auth/signup", {
+        email,
+        password,
+        name,
+      });
 
       console.log(res.data);
       setMessage(res.data.message || "Account created successfully! Please check your email to verify your account.");

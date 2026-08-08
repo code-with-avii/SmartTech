@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
-import { API_URL } from "../Utils/config.js";
+import api from "../Utils/api.js";
 
 const statusColors = {
   Pending: "bg-yellow-100 text-yellow-800",
@@ -21,11 +20,7 @@ const Orders = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-        const res = await axios.get(`${API_URL}/api/orders`, {
-          headers: { Authorization: `Bearer ${token}` },
-          withCredentials: true,
-        });
+        const res = await api.get("/api/orders");
         setOrders(res.data);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load orders");

@@ -1,15 +1,8 @@
-import axios from "axios";
-import { API_URL } from "../Utils/config.js";
+import api from "../Utils/api.js";
 
 const LogoutUser = async () =>{
     try{
-        await axios.post(
-            `${API_URL}/api/auth/logout`,
-            {},
-            {
-                withCredentials: true,
-            }
-        );
+        await api.post("/api/auth/logout");
 
     }
     catch(err){

@@ -9,8 +9,7 @@ import Footer from "../components/Footer.jsx";
 import VerificationStatus from "../components/VerificationStatus.jsx";
 import { useToast } from "../hooks/useToast.js";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { API_URL } from "../Utils/config.js";
+import api from "../Utils/api.js";
 
 const EMPTY_ADDR = { fullName: '', phone: '', addressLine1: '', addressLine2: '', city: '', state: '', pinCode: '' };
 
@@ -28,19 +27,10 @@ const Profile = () => {
   const [addrForm, setAddrForm] = useState(EMPTY_ADDR);
   const [savingAddr, setSavingAddr] = useState(false);
 
-  const getToken = () => {
-    return 'cookie';
-  };
-
   const fetchAddresses = async () => {
     setLoadingAddr(true);
     try {
-      const token = getToken();
-      if (!token) return;
-      const res = await axios.get(`${API_URL}/api/auth/addresses`, {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true,
-      });
+      const res = await api.get("/api/auth/addresses");
       setAddresses(res.data || []);
     } catch (e) {
       showToast("Failed to load addresses", "error");
@@ -85,16 +75,11 @@ const Profile = () => {
     }
     setSavingAddr(true);
     try {
-      const token = getToken();
       if (editingAddr) {
-        await axios.put(`${API_URL}/api/auth/addresses/${editingAddr}`, addrForm, {
-          headers: { Authorization: `Bearer ${token}` }, withCredentials: true,
-        });
+        await api.put(`/api/auth/addresses/${editingAddr}`, addrForm);
         showToast("Address updated!");
       } else {
-        await axios.post(`${API_URL}/api/auth/addresses`, addrForm, {
-          headers: { Authorization: `Bearer ${token}` }, withCredentials: true,
-        });
+        await api.post("/api/auth/addresses", addrForm);
         showToast("Address added!");
       }
       setShowAddrForm(false);
@@ -109,10 +94,7 @@ const Profile = () => {
   const handleDeleteAddress = async (addrId) => {
     if (!window.confirm("Remove this address?")) return;
     try {
-      const token = getToken();
-      await axios.delete(`${API_URL}/api/auth/addresses/${addrId}`, {
-        headers: { Authorization: `Bearer ${token}` }, withCredentials: true,
-      });
+      await api.delete(`/api/auth/addresses/${addrId}`);
       showToast("Address removed");
       fetchAddresses();
     } catch {

@@ -1,15 +1,15 @@
-const isProduction = process.env.NODE_ENV === "production" || process.env.NODE_ENV !== "development";
+const isProduction = process.env.NODE_ENV === "production";
 
 export const accessCookieOptions = {
   httpOnly: true,
-  secure: true,
-  sameSite: "none",
+  secure: isProduction,
+  sameSite: isProduction ? "none" : "lax",
   maxAge: 15 * 60 * 1000,
 };
 
 export const refreshCookieOptions = {
   httpOnly: true,
-  secure: true,
-  sameSite: "none",
+  secure: isProduction,
+  sameSite: isProduction ? "none" : "lax",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };

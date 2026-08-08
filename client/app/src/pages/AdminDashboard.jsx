@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import axios from "axios";
+import React, { useState, useEffect, useCallback } from "react";
+import api from "../Utils/api.js";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { API_URL } from "../Utils/config.js";
 import { Logout } from "../Store/userSlice.js";
 import { useToast } from "../hooks/useToast.js";
 
@@ -32,27 +31,18 @@ const AdminDashboard = () => {
     type: "Mobile",
   });
 
-  const token = localStorage.getItem("accessToken");
-  const apiOptions = useMemo(
-    () => ({
-      withCredentials: true,
-      headers: { Authorization: `Bearer ${token}` },
-    }),
-    [token],
-  );
-
   const fetchStats = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/admin/stats`, apiOptions);
+      const res = await api.get("/api/admin/stats");
       setStats(res.data);
     } catch (err) {
       console.error("Error fetching stats", err);
     }
-  }, [apiOptions]);
+  }, []);
 
   const fetchProducts = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_URL}/products`);
+      const res = await api.get("/products");
       setProducts(res.data);
     } catch (err) {
       console.error(err);
@@ -61,25 +51,25 @@ const AdminDashboard = () => {
 
   const fetchCategories = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_URL}/categories`, apiOptions);
+      const res = await api.get("/categories");
       setCategories(res.data);
     } catch (err) {
       console.error(err);
     }
-  }, [apiOptions]);
+  }, []);
 
   const fetchAllOrders = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/orders/admin/orders`, apiOptions);
+      const res = await api.get("/api/orders/admin/orders");
       setAllOrders(res.data || []);
     } catch (err) {
       console.error('Failed to fetch orders', err);
     }
-  }, [apiOptions]);
+  }, []);
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
-      await axios.put(`${API_URL}/api/orders/${orderId}/status`, { status: newStatus }, apiOptions);
+      await api.put(`/api/orders/${orderId}/status`, { status: newStatus });
       showToast(`Order status updated to ${newStatus}`);
       setAllOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: newStatus } : o));
     } catch {
@@ -89,16 +79,7 @@ const AdminDashboard = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post(
-        `${API_URL}/api/auth/logout`,
-        {},
-        {
-          withCredentials: true,
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      await api.post("/api/auth/logout");
       localStorage.removeItem("user");
 
       dispatch(Logout());
@@ -119,10 +100,10 @@ const AdminDashboard = () => {
     (async () => {
       try {
         const [statsRes, productsRes, categoriesRes, ordersRes] = await Promise.all([
-          axios.get(`${API_URL}/api/admin/stats`, apiOptions),
-          axios.get(`${API_URL}/products`),
-          axios.get(`${API_URL}/categories`, apiOptions),
-          axios.get(`${API_URL}/api/orders/admin/orders`, apiOptions),
+          api.get("/api/admin/stats"),
+          api.get("/products"),
+          api.get("/categories"),
+          api.get("/api/orders/admin/orders"),
         ]);
         if (!cancelled) {
           setStats(statsRes.data);
@@ -138,17 +119,13 @@ const AdminDashboard = () => {
     return () => {
       cancelled = true;
     };
-  }, [user, navigate, apiOptions]);
+  }, [user, navigate]);
 
   // Category Actions
   const handleAddCategory = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(
-        `${API_URL}/categories`,
-        { name: newCatName },
-        apiOptions,
-      );
+      await api.post("/categories", { name: newCatName });
       setNewCatName("");
       fetchCategories();
     } catch {
@@ -159,7 +136,7 @@ const AdminDashboard = () => {
   const handleDeleteCategory = async (id) => {
     if (!window.confirm("Delete category?")) return;
     try {
-      await axios.delete(`${API_URL}/categories/${id}`, apiOptions);
+      await api.delete(`/categories/${id}`);
       fetchCategories();
     } catch {
       showToast("Failed to delete category", "error");
@@ -197,14 +174,10 @@ const AdminDashboard = () => {
     e.preventDefault();
     try {
       if (editingProduct) {
-        await axios.put(
-          `${API_URL}/products/${editingProduct._id}`,
-          productForm,
-          apiOptions,
-        );
+        await api.put(`/products/${editingProduct._id}`, productForm);
         showToast("Product updated");
       } else {
-        await axios.post(`${API_URL}/products`, productForm, apiOptions);
+        await api.post("/products", productForm);
         showToast("Product created");
       }
       setShowProductModal(false);
@@ -218,7 +191,7 @@ const AdminDashboard = () => {
   const handleDeleteProduct = async (id) => {
     if (!window.confirm("Delete product?")) return;
     try {
-      await axios.delete(`${API_URL}/products/${id}`, apiOptions);
+      await api.delete(`/products/${id}`);
       fetchProducts();
       if (activeTab === "dashboard") fetchStats();
     } catch {

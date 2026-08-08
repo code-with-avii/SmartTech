@@ -156,15 +156,9 @@ const LogoutUser = async (req, res) => {
       },
     });
 
-    const cookieOptions = {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-    };
-
     return res
-      .clearCookie("accessToken", cookieOptions)
-      .clearCookie("refreshToken", cookieOptions)
+      .clearCookie("accessToken", accessCookieOptions)
+      .clearCookie("refreshToken", refreshCookieOptions)
       .status(200)
       .json({
         success: true,

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { API_URL } from "../Utils/config.js";
+import api from "../Utils/api.js";
 import { useDispatch } from 'react-redux';
 import { login } from '../Store/userSlice.js';
 
@@ -23,8 +22,8 @@ const VerifyEmail = () => {
       }
 
       try {
-        const response = await axios.get(
-          `${API_URL}/api/email/verify-email?token=${token}`
+        const response = await api.get(
+          `/api/email/verify-email?token=${token}`,
         );
 
         if (response.data.success) {

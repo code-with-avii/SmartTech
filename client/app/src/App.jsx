@@ -13,9 +13,9 @@ import CameraSection from "./Products/CameraSection.jsx";
 import VerifyEmail from "./pages/VerifyEmail.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { login } from "./Store/userSlice";
+import { login, Logout } from "./Store/userSlice";
 import AdminDashboard from "./pages/AdminDashboard.jsx"
 import ProductDetail from "./pages/ProductDetail.jsx"
 import Wishlist from "./pages/Wishlist.jsx"
@@ -28,32 +28,40 @@ import AdminRoute from "./components/AdminRoute.jsx";
 import TrackOrder from "./pages/TrackOrder.jsx";
 import Compare from "./pages/Compare.jsx";
 import TopNavbar from "./components/TopNavbar.jsx";
-import axios from "axios";
-import { API_URL } from "./Utils/config.js";
+import api from "./Utils/api.js";
 
 function App() {
   const dispatch = useDispatch();
+  const [sessionReady, setSessionReady] = useState(false);
 
   useEffect(() => {
     const checkAuthSession = async () => {
       try {
-        const res = await axios.post(
-          `${API_URL}/api/auth/refresh`,
-          {},
-          { withCredentials: true }
-        );
+        const res = await api.post("/api/auth/refresh");
         if (res.data && res.data.user) {
           localStorage.setItem("user", JSON.stringify(res.data.user));
           dispatch(login(res.data.user));
         } else {
           localStorage.removeItem("user");
+          dispatch(Logout());
         }
       } catch (err) {
         localStorage.removeItem("user");
+        dispatch(Logout());
+      } finally {
+        setSessionReady(true);
       }
     };
     checkAuthSession();
   }, [dispatch]);
+
+  if (!sessionReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <Router>

@@ -1,13 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import api from "../Utils/api.js";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { clearCart } from "../Store/cartSlice.js";
-import { API_URL } from "../Utils/config.js";
 import { useToast } from "../hooks/useToast.js";
 
-const API_BASE_URL = `${API_URL}/api/payments`;
-const AUTH_BASE_URL = `${API_URL}/api/auth`;
 const LOGIN_ROUTE = "/login";
 
 const loadRazorpayScript = () =>
@@ -50,12 +47,7 @@ const RazorpayPayment = () => {
   useEffect(() => {
     const fetchAddresses = async () => {
       try {
-        const token = getAccessToken();
-        if (!token) return;
-        const res = await axios.get(`${API_URL}/api/auth/addresses`, {
-          headers: { Authorization: `Bearer ${token}` },
-          withCredentials: true,
-        });
+        const res = await api.get("/api/auth/addresses");
         setAddresses(res.data || []);
         if (res.data?.length > 0) setSelectedAddressId(res.data[0]._id || res.data[0].id);
       } catch { /* not critical */ }
@@ -71,62 +63,17 @@ const RazorpayPayment = () => {
     return Number(((subtotal - discountFromCart) * 1.18).toFixed(2));
   }, [subtotal, discountFromCart]);
 
-  const getAccessToken = () => {
-    return 'cookie';
-  };
-
   const redirectToLogin = (message) => {
     setError(message || "Session expired. Please login again to continue payment.");
     localStorage.removeItem("user");
     setTimeout(() => navigate(LOGIN_ROUTE), 1000);
   };
 
-  const refreshAccessToken = async () => {
-    try {
-      const response = await axios.post(
-        `${AUTH_BASE_URL}/refresh`,
-        {},
-        {
-          withCredentials: true,
-        },
-      );
-      if (response?.data?.user) {
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        return 'cookie';
-      }
-      return null;
-    } catch {
-      return null;
-    }
-  };
-
-  const withAuthRetry = async (requestFn) => {
-    try {
-      return await requestFn('cookie');
-    } catch (err) {
-      if (err.response?.status === 401 || err.response?.status === 403) {
-        const freshToken = await refreshAccessToken();
-        if (!freshToken) {
-          redirectToLogin("Session expired. Please login again to continue payment.");
-          return null;
-        }
-        return requestFn(freshToken);
-      }
-      throw err;
-    }
-  };
-
   const fetchStatus = async (orderId) => {
     if (!orderId) return;
 
     try {
-      const response = await withAuthRetry((token) =>
-        axios.get(`${API_BASE_URL}/status/${orderId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-          withCredentials: true,
-        }),
-      );
-      if (!response) return;
+      const response = await api.get(`/api/payments/status/${orderId}`);
       setPaymentStatus(response.data.status || "Pending");
     } catch {
       // If status fetching fails, do not block checkout flow
@@ -150,33 +97,19 @@ const RazorpayPayment = () => {
         throw new Error("Unable to load Razorpay checkout.");
       }
       console.log(items);
-      const createOrderResponse = await withAuthRetry((token) =>
-    
-        axios.post(
-          `${API_BASE_URL}/create-order`,
-          {
-            amount: totalAmount,
-            discountAmount: discountFromCart,
-            shippingAddress: selectedAddress || null,
-            items: items.map((item) => ({
-              productId: item.productId,
-              quantity: item.quantity || 1,
-              name: item.name,
-              price: item.price,
-              color: item.selectedVariant?.color,
-              size: item.selectedVariant?.size || item.selectedVariant?.storage,
-            })),
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-            withCredentials: true,
-          },
-        ),
-      );
-      if (!createOrderResponse) {
-        setIsLoading(false);
-        return;
-      }
+      const createOrderResponse = await api.post("/api/payments/create-order", {
+        amount: totalAmount,
+        discountAmount: discountFromCart,
+        shippingAddress: selectedAddress || null,
+        items: items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity || 1,
+          name: item.name,
+          price: item.price,
+          color: item.selectedVariant?.color,
+          size: item.selectedVariant?.size || item.selectedVariant?.storage,
+        })),
+      });
 
       const { order_id, amount, currency, key } = createOrderResponse.data;
       setLastOrderId(order_id);
@@ -191,21 +124,11 @@ const RazorpayPayment = () => {
         order_id,
         handler: async (response) => {
           try {
-            const verifyResponse = await withAuthRetry((token) =>
-              axios.post(
-                `${API_BASE_URL}/verify-payment`,
-                {
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_signature: response.razorpay_signature,
-                },
-                {
-                  headers: { Authorization: `Bearer ${token}` },
-                  withCredentials: true,
-                },
-              ),
-            );
-            if (!verifyResponse) return;
+            const verifyResponse = await api.post("/api/payments/verify-payment", {
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+            });
 
             if (verifyResponse.data.success) {
               setPaymentSuccess({
@@ -249,6 +172,10 @@ const RazorpayPayment = () => {
 
       razorpayInstance.open();
     } catch (err) {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        redirectToLogin("Session expired. Please login again to continue payment.");
+        return;
+      }
       setError(err.response?.data?.message || err.message || "Unable to start payment.");
       setPaymentStatus("Failed");
       setIsLoading(false);

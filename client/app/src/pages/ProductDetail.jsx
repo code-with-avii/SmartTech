@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import axios from 'axios';
+import api from "../Utils/api.js";
 import { addToCart } from '../Store/cartSlice.js';
 import { addToCompare, removeFromCompare } from '../Store/compareSlice.js';
 import Navbar from '../components/Navbar.jsx';
@@ -128,12 +128,10 @@ const ProductDetail = () => {
 
     setSubmittingReview(true);
     try {
-      const token = localStorage.getItem('accessToken');
-      const res = await axios.post(
-        `${API_URL}/products/${id}/reviews`,
-        { rating: reviewRating, comment: reviewComment },
-        { headers: { Authorization: `Bearer ${token}` }, withCredentials: true },
-      );
+      const res = await api.post(`/products/${id}/reviews`, {
+        rating: reviewRating,
+        comment: reviewComment,
+      });
       setProduct(res.data);
       setReviewComment('');
       setReviewRating(5);
