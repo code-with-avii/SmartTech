@@ -39,7 +39,7 @@ const SignUp = () => {
       
       // Navigate after showing message
       setTimeout(() => {
-        navigate("/Login");
+        navigate("/login");
       }, 3000);
     } catch (err) {
       console.log(err.response?.data);

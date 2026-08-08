@@ -4,16 +4,16 @@ import axios from 'axios';
 import { API_URL } from "../Utils/config.js";
 
 const ForgotPassword = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
     setMessage('');
+    setIsLoading(true);
 
     try {
       const response = await axios.post(
@@ -27,7 +27,7 @@ const ForgotPassword = () => {
         setEmail('');
         
         setTimeout(() => {
-          navigate('/Login');
+          navigate('/login');
         }, 3000);
       } else {
         setMessageType('error');
@@ -45,7 +45,7 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-900 via-purple-900 to-black">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-900 via-purple-900 to-black animate-gradient">
       <div className="bg-white/10 backdrop-blur-lg border border-white/20 shadow-2xl rounded-2xl p-8 w-96 text-white">
         <h2 className="text-center text-3xl mb-6 font-bold">Reset Password</h2>
         <p className="text-center text-gray-300 mb-6">
@@ -55,8 +55,8 @@ const ForgotPassword = () => {
         {message && (
           <div className={`mb-4 p-3 rounded-md text-center ${
             messageType === "success" 
-              ? "bg-green-100 text-green-700 border border-green-300" 
-              : "bg-red-100 text-red-700 border border-red-300"
+              ? "bg-green-100/20 text-green-300 border border-green-500/30" 
+              : "bg-red-100/20 text-red-300 border border-red-500/30"
           }`}>
             {message}
           </div>
@@ -87,7 +87,7 @@ const ForgotPassword = () => {
 
         <div className="mt-6 text-center">
           <button
-            onClick={() => navigate('/Login')}
+            onClick={() => navigate('/login')}
             className="text-blue-300 hover:text-blue-400 transition duration-200"
           >
             Back to Login

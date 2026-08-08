@@ -30,10 +30,6 @@ const Login = () => {
         role: res.data.user.role,
       };
 
-      localStorage.setItem("accessToken", res.data.accessToken);
-      if (res.data.refreshToken) {
-        localStorage.setItem("refreshToken", res.data.refreshToken);
-      }
       localStorage.setItem("user", JSON.stringify(userPayload));
 
       dispatch(login(userPayload));

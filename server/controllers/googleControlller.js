@@ -24,7 +24,7 @@ export async function googleAssignToken(req, res) {
 
     const frontendUrl = process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/google-callback` : "http://localhost:5173/google-callback";
     res.redirect(
-      `${frontendUrl}?accessToken=${accessToken}&refreshToken=${refreshToken}&user=${encodeURIComponent(JSON.stringify(userPayload))}`
+      `${frontendUrl}?user=${encodeURIComponent(JSON.stringify(userPayload))}`
     );
   } catch (e) {
     return res.status(500).json({

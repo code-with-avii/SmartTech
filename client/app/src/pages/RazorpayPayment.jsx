@@ -72,48 +72,27 @@ const RazorpayPayment = () => {
   }, [subtotal, discountFromCart]);
 
   const getAccessToken = () => {
-    const rawToken = localStorage.getItem("accessToken");
-    if (!rawToken || rawToken === "undefined" || rawToken === "null") {
-      return null;
-    }
-
-    let token = rawToken;
-    try {
-      // Handles values accidentally saved as JSON strings
-      const parsed = JSON.parse(rawToken);
-      if (typeof parsed === "string") token = parsed;
-    } catch {
-      token = rawToken;
-    }
-
-    token = String(token).replace(/^Bearer\s+/i, "").replace(/^"+|"+$/g, "").trim();
-    return token || null;
+    return 'cookie';
   };
 
   const redirectToLogin = (message) => {
     setError(message || "Session expired. Please login again to continue payment.");
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
     setTimeout(() => navigate(LOGIN_ROUTE), 1000);
   };
 
   const refreshAccessToken = async () => {
     try {
-      const storedRefreshToken = localStorage.getItem("refreshToken");
       const response = await axios.post(
         `${AUTH_BASE_URL}/refresh`,
-        { refreshToken: storedRefreshToken },
+        {},
         {
           withCredentials: true,
         },
       );
-      const freshToken = response?.data?.accessToken;
-      if (freshToken) {
-        localStorage.setItem("accessToken", freshToken);
-        if (response?.data?.refreshToken) {
-          localStorage.setItem("refreshToken", response.data.refreshToken);
-        }
-        return freshToken;
+      if (response?.data?.user) {
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        return 'cookie';
       }
       return null;
     } catch {
@@ -122,17 +101,8 @@ const RazorpayPayment = () => {
   };
 
   const withAuthRetry = async (requestFn) => {
-    let token = getAccessToken();
-    if (!token) {
-      token = await refreshAccessToken();
-    }
-    if (!token) {
-      redirectToLogin("Please login before making a payment.");
-      return null;
-    }
-
     try {
-      return await requestFn(token);
+      return await requestFn('cookie');
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {
         const freshToken = await refreshAccessToken();

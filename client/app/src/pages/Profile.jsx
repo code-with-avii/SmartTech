@@ -29,9 +29,7 @@ const Profile = () => {
   const [savingAddr, setSavingAddr] = useState(false);
 
   const getToken = () => {
-    const raw = localStorage.getItem("accessToken");
-    if (!raw || raw === 'undefined' || raw === 'null') return null;
-    try { const p = JSON.parse(raw); return typeof p === 'string' ? p : raw; } catch { return raw; }
+    return 'cookie';
   };
 
   const fetchAddresses = async () => {

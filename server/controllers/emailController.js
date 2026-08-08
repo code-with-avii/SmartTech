@@ -2,6 +2,8 @@ import User from '../models/users.js';
 import { sendVerificationEmail, generateVerificationToken, sendPasswordResetEmail } from '../utils/emailService.js';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import { generateAccessToken, generateRefreshToken } from './controllers-users.js';
+import { accessCookieOptions, refreshCookieOptions } from '../utils/cookieOptions.js';
 
 export const verifyEmail = async (req, res) => {
   try {
@@ -29,12 +31,25 @@ export const verifyEmail = async (req, res) => {
     user.isVerified = true;
     user.verificationToken = undefined;
     user.verificationTokenExpires = undefined;
+
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+    user.refreshToken = refreshToken;
     await user.save();
 
-    res.status(200).json({ 
-      success: true, 
-      message: 'Email verified successfully' 
-    });
+    res
+      .cookie("accessToken", accessToken, accessCookieOptions)
+      .cookie("refreshToken", refreshToken, refreshCookieOptions)
+      .status(200)
+      .json({ 
+        success: true, 
+        message: 'Email verified successfully. Session issued.',
+        user: {
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        }
+      });
   } catch (error) {
     console.error('Email verification error:', error);
     res.status(500).json({ 

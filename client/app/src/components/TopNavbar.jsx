@@ -12,7 +12,7 @@ const TopNavbar = () => {
             className="cursor-pointer hover:bg-[#528748] px-2 py-1 rounded"
             to="/"
             >Home</Link>
-            <Link className="cursor-pointer hover:bg-[#528748] px-2 py-1 rounded" to={"/Login"}>Login</Link>
+            <Link className="cursor-pointer hover:bg-[#528748] px-2 py-1 rounded" to={"/login"}>Login</Link>
             <li className="cursor-pointer hover:bg-[#528748] px-2 py-1 rounded">Contact</li>
             <Link 
             to="/help"

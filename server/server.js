@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 dotenv.config();
 import compression from "compression";
@@ -14,6 +13,7 @@ import verifyAccessToken, { isAdmin } from "./middleware/authmiddleware.js";
 import { handlePaymentWebhook } from "./controllers/paymentController.js";
 import { addProductReview } from "./controllers/reviewController.js";
 import hpp from "hpp";
+import { generalLimiter, productsLimiter } from "./middleware/rateLimiters.js";
 
 const app = express();
 app.use(helmet());
@@ -23,6 +23,10 @@ app.use(
     origin: function (origin, callback) {
       const allowedOrigins = [
         "https://smart-tech-gold.vercel.app",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
         process.env.CLIENT_URL,
       ];
       if (
@@ -39,11 +43,7 @@ app.use(
   }),
 );
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 100,
-});
-app.use(limiter);
+app.use(generalLimiter);
 app.use(hpp());
 app.post(
   "/api/payments/webhook",
@@ -57,7 +57,7 @@ app.get("/", (req, res) => {
   res.send("E-commerce server running");
 });
 
-app.get("/products", async (req, res) => {
+app.get("/products", productsLimiter, async (req, res) => {
   try {
     const { search } = req.query;
     const filter = {};
@@ -91,7 +91,7 @@ app.get("/products", async (req, res) => {
   }
 });
 
-app.get("/products/:id", async (req, res) => {
+app.get("/products/:id", productsLimiter, async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate(
       "category",
@@ -106,9 +106,9 @@ app.get("/products/:id", async (req, res) => {
   }
 });
 
-app.post("/products/:id/reviews", verifyAccessToken, addProductReview);
+app.post("/products/:id/reviews", productsLimiter, verifyAccessToken, addProductReview);
 
-app.post("/products", verifyAccessToken, isAdmin, async (req, res) => {
+app.post("/products", productsLimiter, verifyAccessToken, isAdmin, async (req, res) => {
   try {
     const { price, name, image, description, category, type } = req.body;
 
@@ -130,7 +130,7 @@ app.post("/products", verifyAccessToken, isAdmin, async (req, res) => {
   }
 });
 
-app.put("/products/:id", verifyAccessToken, isAdmin, async (req, res) => {
+app.put("/products/:id", productsLimiter, verifyAccessToken, isAdmin, async (req, res) => {
   const { price, name, image, description, category, type } = req.body;
   try {
     const updatedProduct = await Product.findByIdAndUpdate(
@@ -151,7 +151,7 @@ app.put("/products/:id", verifyAccessToken, isAdmin, async (req, res) => {
   }
 });
 
-app.delete("/products/:id", verifyAccessToken, isAdmin, async (req, res) => {
+app.delete("/products/:id", productsLimiter, verifyAccessToken, isAdmin, async (req, res) => {
   try {
     await Product.findByIdAndDelete(req.params.id);
     res.json({ message: "Product deleted" });

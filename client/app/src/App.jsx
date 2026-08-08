@@ -28,17 +28,31 @@ import AdminRoute from "./components/AdminRoute.jsx";
 import TrackOrder from "./pages/TrackOrder.jsx";
 import Compare from "./pages/Compare.jsx";
 import TopNavbar from "./components/TopNavbar.jsx";
+import axios from "axios";
+import { API_URL } from "./Utils/config.js";
 
 function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    const user = localStorage.getItem("user");
-
-    if (token && user) {
-      dispatch(login(JSON.parse(user)));
-    }
+    const checkAuthSession = async () => {
+      try {
+        const res = await axios.post(
+          `${API_URL}/api/auth/refresh`,
+          {},
+          { withCredentials: true }
+        );
+        if (res.data && res.data.user) {
+          localStorage.setItem("user", JSON.stringify(res.data.user));
+          dispatch(login(res.data.user));
+        } else {
+          localStorage.removeItem("user");
+        }
+      } catch (err) {
+        localStorage.removeItem("user");
+      }
+    };
+    checkAuthSession();
   }, [dispatch]);
 
   return (
@@ -47,7 +61,6 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/google-callback" element={<GoogleCallback />} />
-        <Route path="/Login" element={<Login />} />
         <Route path="/help" element={<Helpcenter />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/wishlist" element={<Wishlist />} />

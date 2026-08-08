@@ -37,27 +37,58 @@ const getReadableError = (error, fallback) => {
 
 export const createOrder = async (req, res) => {
   try {
-    const { amount, items, discountAmount, shippingAddress } = req.body;
-    const normalizedAmount = Number(amount);
-
-    if (!Number.isFinite(normalizedAmount) || normalizedAmount <= 0) {
-      return res.status(400).json({ message: "Invalid amount provided" });
-    }
+    const { items, discountAmount, shippingAddress } = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ message: "Cart items are required" });
     }
 
-    const cartItems = items.map((item) => ({
-      productId: item._id || item.productId,
-      quantity: item.quantity || 1,
-      name: item.name,
-      price: item.price,
-      image: item.image,
-      variant: item.variant,
-    }));
+    let calculatedSubtotal = 0;
+    const cartItems = [];
 
-    const amountInPaise = toPaise(normalizedAmount);
+    for (const item of items) {
+      const pId = item.productId || item._id;
+      if (!pId) {
+        return res.status(400).json({ message: "Product ID is required for all items" });
+      }
+
+      const product = await Product.findById(pId);
+      if (!product) {
+        return res.status(404).json({ message: `Product not found: ${pId}` });
+      }
+
+      const qty = Number(item.quantity) || 1;
+      if (qty <= 0) {
+        return res.status(400).json({ message: `Invalid quantity for product: ${product.name}` });
+      }
+
+      calculatedSubtotal += product.price * qty;
+
+      cartItems.push({
+        productId: product._id,
+        quantity: qty,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        variant: {
+          color: item.color || (item.variant && item.variant.color),
+          storage: item.size || (item.variant && item.variant.storage) || item.storage,
+        },
+      });
+    }
+
+    const discount = Number(discountAmount) || 0;
+    if (discount < 0) {
+      return res.status(400).json({ message: "Invalid discount amount" });
+    }
+
+    // Apply 18% tax (GST)
+    const calculatedTotal = Number(((calculatedSubtotal - discount) * 1.18).toFixed(2));
+    if (calculatedTotal <= 0) {
+      return res.status(400).json({ message: "Calculated total must be greater than zero" });
+    }
+
+    const amountInPaise = toPaise(calculatedTotal);
     const razorpay = getRazorpayClient();
 
     const order = await razorpay.orders.create({
@@ -69,11 +100,11 @@ export const createOrder = async (req, res) => {
     await Payment.create({
       user: req.user.userId,
       razorpayOrderId: order.id,
-      amount: amountInPaise,
+      amount: calculatedTotal,
       currency: order.currency,
       status: "Pending",
       cartItems,
-      discountAmount: Number(discountAmount) || 0,
+      discountAmount: discount,
       shippingAddress,
     });
 
@@ -164,19 +195,20 @@ export const verifyPayment = async (req, res) => {
           const product = await Product.findById(item.productId);
           if (product && product.variants && product.variants.length > 0) {
             let variantIndex = -1;
-            if (item.variant) {
+            if (item.variant && (item.variant.color || item.variant.storage)) {
               variantIndex = product.variants.findIndex(
                 v => 
                   (!item.variant.color || v.color === item.variant.color) &&
-                  (!item.variant.storage || v.size === item.variant.storage)
+                  (!item.variant.storage || (v.size || v.storage) === item.variant.storage)
               );
             }
-            if (variantIndex === -1) {
-              variantIndex = 0;
+            if (variantIndex !== -1) {
+              const countInStock = product.variants[variantIndex].countInStock || 0;
+              product.variants[variantIndex].countInStock = Math.max(0, countInStock - item.quantity);
+              await product.save();
+            } else {
+              console.warn(`Variant not found for stock deduction: product ${item.productId}, variant:`, item.variant);
             }
-            const countInStock = product.variants[variantIndex].countInStock || 0;
-            product.variants[variantIndex].countInStock = Math.max(0, countInStock - item.quantity);
-            await product.save();
           }
         } catch (stockErr) {
           console.error("Deduct stock error for product:", item.productId, stockErr);

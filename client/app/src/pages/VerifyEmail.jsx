@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from "../Utils/config.js";
+import { useDispatch } from 'react-redux';
+import { login } from '../Store/userSlice.js';
 
 const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [status, setStatus] = useState('loading');
   const [message, setMessage] = useState('');
 
@@ -26,7 +29,18 @@ const VerifyEmail = () => {
 
         if (response.data.success) {
           setStatus('success');
-          setMessage('Email verified successfully! You can now login.');
+          setMessage('Email verified successfully! Logging you in...');
+          if (response.data.user) {
+            localStorage.setItem("user", JSON.stringify(response.data.user));
+            dispatch(login(response.data.user));
+            setTimeout(() => {
+              if (response.data.user.role === 'admin') {
+                navigate('/admin');
+              } else {
+                navigate('/');
+              }
+            }, 2500);
+          }
         } else {
           setStatus('error');
           setMessage(response.data.message || 'Verification failed');
@@ -41,10 +55,10 @@ const VerifyEmail = () => {
     };
 
     verifyEmail();
-  }, [searchParams]);
+  }, [searchParams, navigate, dispatch]);
 
   const handleGoToLogin = () => {
-    navigate('/Login');
+    navigate('/login');
   };
 
   return (
@@ -72,7 +86,7 @@ const VerifyEmail = () => {
                 onClick={handleGoToLogin}
                 className="mt-6 w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200"
               >
-                Go to Login
+                Go to Home
               </button>
             </>
           )}

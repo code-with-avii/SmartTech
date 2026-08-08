@@ -8,11 +8,12 @@ import paymentRouter from "./routes/paymentRoutes.js";
 import orderRouter from "./routes/orderRoutes.js";
 import passport from "passport";
 import "./controllers/passport.js";
+import { authLimiter, paymentLimiter } from "./middleware/rateLimiters.js";
 
 app.use(passport.initialize());
-app.use("/api/auth", authrouter);
+app.use("/api/auth", authLimiter, authrouter);
 app.use("/api/email", emailRoutes);
-app.use("/api/payments", paymentRouter);
+app.use("/api/payments", paymentLimiter, paymentRouter);
 app.use("/api/orders", orderRouter);
 
 const port = process.env.PORT || 5000;

@@ -1,244 +1,87 @@
+# SmartTech Premium E-Commerce Platform
 
-# SmartTech E-Commerce Website
+A secure, production-grade e-commerce application built with React, Redux Toolkit, Node.js, Express, MongoDB, and integrated with Razorpay payments. The application utilizes a highly secure architecture featuring server-side price validation, correct stock deduction matching, strict route-specific rate limiting, and HttpOnly cookie-based authorization.
 
-A modern, feature-rich e-commerce platform built with React, Redux, and Tailwind CSS. SmartTech offers a seamless shopping experience with advanced filtering, wishlist management, and responsive design.
+---
 
-## 🚀 Features
+## 🔒 Security & Architecture Upgrades
 
-### 🛍️ Shopping Experience
-- **Product Categories**: Mobiles, Laptops, Drones, Cameras, Tablets
-- **Advanced Filtering**: Price range, brand, and search functionality
-- **Quick View**: Modal-based product preview without page navigation
-- **Wishlist Management**: Add/remove items with persistent storage
-- **Shopping Cart**: Full cart management with quantity controls
+### 1. Secure Server-Side Price & Tax Calculation
+To prevent client-side manipulation of order totals, all pricing calculations are executed exclusively on the backend:
+- The backend retrieves the authoritative prices for each product directly from MongoDB based on product IDs and quantities.
+- Applies active discount percentages dynamically.
+- Enforces an 18% GST tax rate.
+- Uses the calculated secure sum to generate the Razorpay payment order.
 
-### 🎨 User Interface
-- **Responsive Design**: Optimized for desktop, tablet, and mobile
-- **Modern UI**: Clean, professional design with smooth animations
-- **Interactive Elements**: Hover effects, transitions, and micro-interactions
-- **Dark Mode Support**: Enhanced user experience options
+### 2. Precise Variant & Stock Management
+- **Variant Matching**: Fixed variant-matching logic to compare variant sizes/storages accurately (mapping frontend properties like `storage` or `size` to backend `size`/`storage`).
+- **Safe Stock Deduction**: Decrements stock during order verification only for the matching variant inside the product's variants array (instead of defaulting to index `0`).
 
-### 🔐 User Management
-- **Authentication**: Login, signup, and password reset
-- **Profile Management**: User account settings and preferences
-- **Session Persistence**: Secure token-based authentication
-- **Admin Dashboard**: Product and order management
+### 3. Secure Session Authentication Flow
+We migrated from vulnerable client-side storage of JWT tokens in `localStorage` to a robust, cookie-centric auth model:
+- **HttpOnly Cookies**: Access tokens and Refresh tokens are stored in secure, `httpOnly: true` cookies. This mitigates Cross-Site Scripting (XSS) risks by completely hiding tokens from frontend JavaScript.
+- **Verification Flow**: 
+  1. Signup registers a new user but issues no session/tokens.
+  2. A verification email containing a secure token is dispatched.
+  3. The user verifies their email via a validation link, which flags their account as verified and generates the initial session cookies.
+  4. Subsequent authentication relies on automated refresh loops via the `/api/auth/refresh` endpoint and credentials-configured Axios requests.
 
-### 📦 Product Management
-- **Dynamic Product Display**: Real-time product updates
-- **Image Lazy Loading**: Optimized performance
-- **Product Details**: Comprehensive product information
-- **Rating System**: Customer reviews and ratings
+### 4. Granular Route Rate Limiting
+Replaced vulnerable global rate limiting with granular, route-specific limiters using `express-rate-limit` to guard resources:
+- **Password Reset**: Extremely strict limits to prevent enumeration attacks.
+- **Authentication**: Strict limits on login/signup endpoints.
+- **Payments**: Controlled limits to secure payment processing.
+- **Products**: Higher limits to ensure pages load quickly.
+- **General API**: Moderate limits for standard actions.
+
+---
 
 ## 🛠️ Technology Stack
 
 ### Frontend
-- **React 18**: Modern component-based architecture
-- **Redux Toolkit**: State management with persistence
-- **React Router**: Client-side routing
-- **Tailwind CSS**: Utility-first styling
-- **Font Awesome**: Icon library
+- **React 18** with Vite for lightning-fast HMR.
+- **Redux Toolkit** for centralized, predictable state management.
+- **Tailwind CSS** & Font Awesome for layout styling and iconography.
+- **Axios** (configured with `withCredentials: true` to handle secure cookies).
 
-### Backend Integration
-- **RESTful API**: Product data management
-- **JSON Server**: Mock backend for development
-- **Axios**: HTTP client for API calls
-
-### Development Tools
-- **Vite**: Fast development server
-- **ESLint**: Code quality enforcement
-- **Git**: Version control
-
-## 📁 Project Structure
-
-```
-client/app/
-├── src/
-│   ├── components/          # Reusable UI components
-│   │   ├── Navbar.jsx
-│   │   ├── CategoryMenu.jsx
-│   │   ├── Footer.jsx
-│   │   ├── ProductSection.jsx
-│   │   ├── QuickView.jsx
-│   │   └── ...
-│   ├── pages/              # Page components
-│   │   ├── Home.jsx
-│   │   ├── Login.jsx
-│   │   ├── Cart.jsx
-│   │   ├── Wishlist.jsx
-│   │   └── ...
-│   ├── Products/           # Category-specific product pages
-│   │   ├── Mobilesection.jsx
-│   │   ├── Laptopsection.jsx
-│   │   ├── DroneSection.jsx
-│   │   ├── CameraSection.jsx
-│   │   └── TabletSection.jsx
-│   ├── Store/              # Redux state management
-│   │   ├── cartSlice.js
-│   │   ├── wishlistSlice.js
-│   │   ├── userSlice.js
-│   │   └── store.js
-│   └── components/         # Additional UI components
-│       ├── HeroBanner.jsx
-│       ├── LoadingSkeleton.jsx
-│       └── ...
-├── public/                # Static assets
-├── index.html
-└── package.json
-```
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js (v14 or higher)
-- npm or yarn
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd E-Commerce website
-   ```
-
-2. **Install dependencies**
-   ```bash
-   cd client/app
-   npm install
-   ```
-
-3. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-4. **Start the backend server** (if using local JSON server)
-   ```bash
-   cd server
-   npm start
-   ```
-
-5. **Open your browser**
-   ```
-   Navigate to http://localhost:5173
-   ```
-
-## 🎯 Key Features Deep Dive
-
-### Shopping Cart System
-- **Add to Cart**: One-click cart addition with quantity management
-- **Cart Persistence**: Items saved across browser sessions
-- **Real-time Updates**: Instant cart count updates
-- **Checkout Integration**: Seamless checkout process
-
-### Wishlist System
-- **Add/Remove**: Toggle wishlist status with visual feedback
-- **Persistent Storage**: Wishlist items saved locally
-- **Quick Actions**: Move items from wishlist to cart
-- **Count Badge**: Real-time wishlist item count
-
-### Quick View Modal
-- **Product Preview**: Detailed product information without navigation
-- **Image Gallery**: High-quality product images
-- **Quantity Selection**: Choose quantity before adding to cart
-- **Wishlist Integration**: Add items directly from quick view
-
-### Advanced Filtering
-- **Price Ranges**: Under 10k, 10k-30k, Above 30k
-- **Brand Search**: Filter by product brand
-- **Real-time Search**: Live product name search
-- **Clear Filters**: One-click filter reset
-
-## 🎨 Design System
-
-### Color Palette
-- **Primary**: Blue (#3B82F6) for actions and links
-- **Secondary**: Orange (#F97316) for CTAs
-- **Accent**: Red (#EF4444) for alerts and important elements
-- **Neutral**: Gray shades for text and backgrounds
-
-### Typography
-- **Headings**: Bold, responsive font sizes
-- **Body**: Clean, readable font stack
-- **Buttons**: Consistent weight and spacing
-
-### Components
-- **Cards**: Rounded corners, shadows, hover effects
-- **Buttons**: Gradient backgrounds, hover states
-- **Modals**: Backdrop overlay, smooth animations
-- **Navigation**: Sticky header, responsive menu
-
-## 🔧 Configuration
-
-### Environment Variables
-Create a `.env` file in the root directory:
-
-```env
-VITE_API_URL=http://localhost:3000
-VITE_APP_NAME=SmartTech
-```
-
-### API Endpoints
-- **Products**: `GET /products`
-- **Users**: `POST /users`, `GET /users/:id`
-- **Authentication**: `POST /login`, `POST /register`
-
-## 📱 Responsive Breakpoints
-
-- **Mobile**: < 768px
-- **Tablet**: 768px - 1024px
-- **Desktop**: > 1024px
-
-## 🚀 Deployment
-
-### Build for Production
-```bash
-npm run build
-```
-
-### Environment Setup
-- **Development**: `npm run dev`
-- **Production**: `npm run preview`
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## 📝 License
-
-This project is licensed under the MIT License.
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Cart items not persisting**
-- Check localStorage permissions
-- Verify Redux persist configuration
-
-**Images not loading**
-- Check image paths in public folder
-- Verify API response structure
-
-**Quick View not working**
-- Ensure QuickView component is imported
-- Check event handlers and state management
-
-**Wishlist not updating**
-- Verify wishlistSlice is imported in store
-- Check localStorage availability
-
-## 📞 Support
-
-For support and queries:
-- Create an issue in the repository
-- Check existing documentation
-- Review component examples
+### Backend
+- **Node.js** & **Express** server framework.
+- **MongoDB** with **Mongoose** schemas for database persistence.
+- **JSON Web Tokens (JWT)** for secure, stateless session tracking.
+- **Nodemailer** for automated account verification and reset mail delivery.
 
 ---
 
-**Built with ❤️ using modern web technologies**
+## 🚀 Getting Started
+
+### 1. Prerequisites
+- Node.js (v16 or higher)
+- MongoDB Database (Local or MongoDB Atlas)
+
+### 2. Configuration
+Create a `.env` file in the `server` directory:
+```env
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+JWT_ACCESS_SECRET=your_access_token_secret
+JWT_REFRESH_SECRET=your_refresh_token_secret
+EMAIL_USER=your_smtp_email
+EMAIL_PASS=your_smtp_password
+CLIENT_URL=http://localhost:5173
+```
+
+### 3. Installation & Run
+
+#### Backend
+```bash
+cd server
+npm install
+npm run dev
+```
+
+#### Frontend
+```bash
+cd client/app
+npm install
+npm run dev
+```

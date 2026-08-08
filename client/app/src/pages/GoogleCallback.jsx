@@ -10,18 +10,12 @@ const GoogleCallback = () => {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const accessToken = params.get("accessToken");
-    const refreshToken = params.get("refreshToken");
     const userStr = params.get("user");
 
-    if (accessToken && userStr) {
+    if (userStr) {
       try {
         const user = JSON.parse(decodeURIComponent(userStr));
         
-        localStorage.setItem("accessToken", accessToken);
-        if (refreshToken) {
-          localStorage.setItem("refreshToken", refreshToken);
-        }
         localStorage.setItem("user", JSON.stringify(user));
         
         // Dispatch to Redux

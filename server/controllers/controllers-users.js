@@ -76,25 +76,11 @@ async function Signup(req, res) {
       // Still allow user to sign up even if email fails
     }
 
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
-    user.refreshToken = refreshToken;
-
     await user.save();
 
-    res
-      .cookie("accessToken", accessToken, accessCookieOptions)
-      .cookie("refreshToken", refreshToken, refreshCookieOptions)
-      .json({
-        accessToken: accessToken,
-        refreshToken,
-        message: "Signup successful. Please check your email to verify your account.",
-        user: {
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        }
-      });
+    res.json({
+      message: "Signup successful. Please check your email to verify your account.",
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -131,6 +117,13 @@ async function Login(req, res) {
         message: "Invalid credentials",
       });
     }
+
+    if (!user.isVerified) {
+      return res.status(400).json({
+        message: "Please verify your email before logging in.",
+      });
+    }
+
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
@@ -142,8 +135,6 @@ async function Login(req, res) {
       .status(200)
       .json({
         message: "Login Successfull",
-        accessToken,
-        refreshToken,
         user: {
           email: user.email,
           name: user.name,
@@ -186,7 +177,7 @@ const LogoutUser = async (req, res) => {
 };
 
 export const RefreshUser = async (req, res) => {
-  const refreshToken = req.body.refreshToken || req.cookies.refreshToken;
+  const refreshToken = req.cookies.refreshToken;
 
   if (!refreshToken) {
     return res.status(401).json({
@@ -205,6 +196,12 @@ export const RefreshUser = async (req, res) => {
       });
     }
 
+    if (!user.isVerified) {
+      return res.status(400).json({
+        message: "Please verify your email.",
+      });
+    }
+
     const newAccessToken = generateAccessToken(user);
     const newRefreshToken = generateRefreshToken(user);
 
@@ -217,8 +214,11 @@ export const RefreshUser = async (req, res) => {
       .status(200)
       .json({
         message: "Token refreshed",
-        accessToken: newAccessToken,
-        refreshToken: newRefreshToken,
+        user: {
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        }
       });
   } catch (error) {
     return res.status(403).json({
