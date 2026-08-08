@@ -1,5 +1,7 @@
 import axios from "axios";
 import { API_URL } from "./config.js";
+import { store } from "../Store/store.js";
+import { Logout } from "../Store/userSlice.js";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -9,11 +11,10 @@ const api = axios.create({
 let refreshPromise = null;
 
 const refreshSession = () => {
-  refreshPromise ??= axios
-    .post(`${API_URL}/api/auth/refresh`, {}, { withCredentials: true })
-    .finally(() => {
-      refreshPromise = null;
-    });
+  refreshPromise ??= api.post("/api/auth/refresh").finally(() => {
+    refreshPromise = null;
+  });
+
   return refreshPromise;
 };
 
@@ -22,10 +23,12 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     const requestUrl = originalRequest?.url || "";
-    const isAuthRequest =
-      requestUrl.includes("/api/auth/refresh") ||
-      requestUrl.includes("/api/auth/login") ||
-      requestUrl.includes("/api/auth/signup");
+
+    const isAuthRequest = [
+      "/api/auth/login",
+      "/api/auth/signup",
+      "/api/auth/refresh",
+    ].some((path) => requestUrl.includes(path));
 
     if (
       (error.response?.status === 401 || error.response?.status === 403) &&
@@ -37,8 +40,10 @@ api.interceptors.response.use(
       try {
         await refreshSession();
         return api(originalRequest);
-      } catch {
+      } catch (refreshError) {
         localStorage.removeItem("user");
+        store.dispatch(Logout());
+        return Promise.reject(refreshError);
       }
     }
 

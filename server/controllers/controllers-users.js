@@ -1,8 +1,14 @@
 import User from "../models/users.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { sendVerificationEmail, generateVerificationToken } from "../utils/emailService.js";
-import { accessCookieOptions, refreshCookieOptions } from "../utils/cookieOptions.js";
+import {
+  sendVerificationEmail,
+  generateVerificationToken,
+} from "../utils/emailService.js";
+import {
+  accessCookieOptions,
+  refreshCookieOptions,
+} from "../utils/cookieOptions.js";
 
 //ACCESS TOKEN
 export function generateAccessToken(user) {
@@ -14,7 +20,7 @@ export function generateAccessToken(user) {
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn:process.env.JWT_EXPIRES_IN,
+      expiresIn: process.env.JWT_EXPIRES_IN,
     },
   );
 }
@@ -72,14 +78,15 @@ async function Signup(req, res) {
     try {
       await sendVerificationEmail(user.email, verificationToken);
     } catch (emailError) {
-      console.error('Failed to send verification email:', emailError);
+      console.error("Failed to send verification email:", emailError);
       // Still allow user to sign up even if email fails
     }
 
     await user.save();
 
     res.json({
-      message: "Signup successful. Please check your email to verify your account.",
+      message:
+        "Signup successful. Please check your email to verify your account.",
     });
   } catch (error) {
     console.error(error);
@@ -139,7 +146,7 @@ async function Login(req, res) {
           email: user.email,
           name: user.name,
           role: user.role,
-        }
+        },
       });
   } catch (error) {
     console.error(error);
@@ -180,11 +187,26 @@ export const RefreshUser = async (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    const decoded = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+
+    if (!decoded?.userId) {
+      return res.status(403).json({
+        message: "Invalid refresh token",
+      });
+    }
 
     const user = await User.findById(decoded.userId);
 
-    if (!user || user.refreshToken !== refreshToken) {
+    if (!user) {
+      return res.status(403).json({
+        message: "Invalid refresh token",
+      });
+    }
+
+    if (user.refreshToken !== refreshToken) {
       return res.status(403).json({
         message: "Invalid refresh token",
       });
@@ -202,7 +224,7 @@ export const RefreshUser = async (req, res) => {
     user.refreshToken = newRefreshToken;
     await user.save();
 
-    res
+    return res
       .cookie("accessToken", newAccessToken, accessCookieOptions)
       .cookie("refreshToken", newRefreshToken, refreshCookieOptions)
       .status(200)
@@ -212,21 +234,44 @@ export const RefreshUser = async (req, res) => {
           email: user.email,
           name: user.name,
           role: user.role,
-        }
+        },
       });
   } catch (error) {
-    return res.status(403).json({
-      message: "Invalid or expired refresh token",
+       if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        message: "Refresh token expired",
+      });
+    }
+     return res.status(403).json({
+      message: "Invalid refresh token",
     });
   }
 };
+
 export { Signup, Login, LogoutUser };
+
+const mapAddressesForFrontend = (addresses) => {
+  return (addresses || []).map(addr => {
+    const parts = (addr.address || "").split("|");
+    return {
+      _id: addr._id,
+      fullName: addr.fullName,
+      phone: addr.phone,
+      addressLine1: parts[0] || "",
+      addressLine2: parts[1] || "",
+      city: addr.city,
+      state: addr.state,
+      pinCode: addr.postalCode,
+      isDefault: addr.isDefault
+    };
+  });
+};
 
 export const getUserAddresses = async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
     if (!user) return res.status(404).json({ message: "User not found" });
-    return res.json(user.addresses || []);
+    return res.json(mapAddressesForFrontend(user.addresses));
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
@@ -235,8 +280,24 @@ export const getUserAddresses = async (req, res) => {
 
 export const addAddress = async (req, res) => {
   try {
-    const { fullName, phone, address, city, state, country, postalCode, isDefault } = req.body;
-    if (!fullName || !phone || !address || !city || !state || !country || !postalCode) {
+    const {
+      fullName,
+      phone,
+      addressLine1,
+      addressLine2,
+      city,
+      state,
+      pinCode,
+      isDefault,
+    } = req.body;
+    if (
+      !fullName ||
+      !phone ||
+      !addressLine1 ||
+      !city ||
+      !state ||
+      !pinCode
+    ) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -244,10 +305,14 @@ export const addAddress = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     if (isDefault) {
-      user.addresses.forEach(addr => addr.isDefault = false);
+      user.addresses.forEach((addr) => (addr.isDefault = false));
     }
 
     const isFirstAddress = user.addresses.length === 0;
+
+    const address = addressLine2 ? `${addressLine1}|${addressLine2}` : addressLine1;
+    const country = req.body.country || "India";
+    const postalCode = pinCode;
 
     user.addresses.push({
       fullName,
@@ -257,11 +322,11 @@ export const addAddress = async (req, res) => {
       state,
       country,
       postalCode,
-      isDefault: isFirstAddress || isDefault
+      isDefault: isFirstAddress || isDefault,
     });
 
     await user.save();
-    return res.status(201).json(user.addresses);
+    return res.status(201).json(mapAddressesForFrontend(user.addresses));
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
@@ -270,28 +335,49 @@ export const addAddress = async (req, res) => {
 
 export const updateAddress = async (req, res) => {
   try {
-    const { fullName, phone, address, city, state, country, postalCode, isDefault } = req.body;
+    const {
+      fullName,
+      phone,
+      addressLine1,
+      addressLine2,
+      city,
+      state,
+      pinCode,
+      isDefault,
+    } = req.body;
     const user = await User.findById(req.user.userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const addr = user.addresses.find(a => String(a._id) === String(req.params.addressId));
+    const addr = user.addresses.find(
+      (a) => String(a._id) === String(req.params.addressId),
+    );
     if (!addr) return res.status(404).json({ message: "Address not found" });
 
     if (isDefault) {
-      user.addresses.forEach(a => a.isDefault = false);
+      user.addresses.forEach((a) => (a.isDefault = false));
     }
 
-    addr.fullName = fullName || addr.fullName;
-    addr.phone = phone || addr.phone;
-    addr.address = address || addr.address;
-    addr.city = city || addr.city;
-    addr.state = state || addr.state;
-    addr.country = country || addr.country;
-    addr.postalCode = postalCode || addr.postalCode;
+    if (fullName !== undefined) addr.fullName = fullName;
+    if (phone !== undefined) addr.phone = phone;
+    
+    if (addressLine1 !== undefined) {
+      const parts = (addr.address || "").split("|");
+      const currentLine2 = addressLine2 !== undefined ? addressLine2 : (parts[1] || "");
+      addr.address = currentLine2 ? `${addressLine1}|${currentLine2}` : addressLine1;
+    } else if (addressLine2 !== undefined) {
+      const parts = (addr.address || "").split("|");
+      const currentLine1 = parts[0] || "";
+      addr.address = addressLine2 ? `${currentLine1}|${addressLine2}` : currentLine1;
+    }
+
+    if (city !== undefined) addr.city = city;
+    if (state !== undefined) addr.state = state;
+    if (req.body.country !== undefined) addr.country = req.body.country;
+    if (pinCode !== undefined) addr.postalCode = pinCode;
     addr.isDefault = isDefault !== undefined ? isDefault : addr.isDefault;
 
     await user.save();
-    return res.json(user.addresses);
+    return res.json(mapAddressesForFrontend(user.addresses));
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
@@ -303,16 +389,51 @@ export const deleteAddress = async (req, res) => {
     const user = await User.findById(req.user.userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    user.addresses = user.addresses.filter(a => String(a._id) !== String(req.params.addressId));
-    
-    if (user.addresses.length > 0 && !user.addresses.some(a => a.isDefault)) {
+    user.addresses = user.addresses.filter(
+      (a) => String(a._id) !== String(req.params.addressId),
+    );
+
+    if (user.addresses.length > 0 && !user.addresses.some((a) => a.isDefault)) {
       user.addresses[0].isDefault = true;
     }
 
     await user.save();
-    return res.json(user.addresses);
+    return res.json(mapAddressesForFrontend(user.addresses));
   } catch (error) {
     console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const UpdateProfile = async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: "Name is required" });
+    }
+    if (name.trim().length > 50) {
+      return res.status(400).json({ message: "Name is too long (max 50 characters)" });
+    }
+
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.name = name.trim();
+    await user.save();
+
+    return res.json({
+      message: "Profile updated successfully",
+      user: {
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        isVerified: user.isVerified
+      }
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };

@@ -3,7 +3,7 @@ import Navbar from "../components/Navbar";
 import { FaSignOutAlt, FaPlus, FaEdit, FaTrash, FaMapMarkerAlt, FaTimes } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import LogoutUser from "../components/LogoutUser.jsx";
-import { Logout } from "../Store/userSlice.js";
+import { Logout, updatedProfile } from "../Store/userSlice.js";
 import { Link } from "react-router";
 import Footer from "../components/Footer.jsx";
 import VerificationStatus from "../components/VerificationStatus.jsx";
@@ -26,6 +26,43 @@ const Profile = () => {
   const [editingAddr, setEditingAddr] = useState(null); // null = add new, object = editing
   const [addrForm, setAddrForm] = useState(EMPTY_ADDR);
   const [savingAddr, setSavingAddr] = useState(false);
+
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [tempName, setTempName] = useState(name || "");
+  const [updatingProfile, setUpdatingProfile] = useState(false);
+
+  const handleSaveName = async () => {
+    if (!tempName || !tempName.trim()) {
+      showToast("Name cannot be empty", "error");
+      return;
+    }
+    if (tempName.trim().length > 50) {
+      showToast("Name is too long", "error");
+      return;
+    }
+    setUpdatingProfile(true);
+    try {
+      const res = await api.put("/api/auth/profile", { name: tempName });
+      const updatedUser = res.data.user;
+      
+      const localUserStr = localStorage.getItem("user");
+      if (localUserStr) {
+        const localUser = JSON.parse(localUserStr);
+        localUser.name = updatedUser.name;
+        localStorage.setItem("user", JSON.stringify(localUser));
+      } else {
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+      }
+
+      dispatch(updatedProfile({ name: updatedUser.name }));
+      showToast("Profile updated successfully");
+      setIsEditingName(false);
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to update profile", "error");
+    } finally {
+      setUpdatingProfile(false);
+    }
+  };
 
   const fetchAddresses = async () => {
     setLoadingAddr(true);
@@ -164,7 +201,7 @@ const Profile = () => {
                 <li>My Coupons</li>
                 <li>My Reviews &amp; Ratings</li>
                 <li>All Notifications</li>
-                <li>My Wishlist</li>
+                <li><Link to="/wishlist" className="hover:text-blue-600">My Wishlist</Link></li>
               </ul>
             </div>
 
@@ -196,12 +233,56 @@ const Profile = () => {
               <div className="bg-white rounded-2xl shadow-sm p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-semibold text-gray-800">Personal Information</h2>
-                  <button className="text-blue-600 hover:underline text-sm">Edit</button>
+                  {isEditingName ? (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveName}
+                        disabled={updatingProfile}
+                        className="text-green-600 hover:underline text-sm font-semibold disabled:opacity-60 cursor-pointer"
+                      >
+                        {updatingProfile ? "Saving..." : "Save"}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setTempName(name);
+                          setIsEditingName(false);
+                        }}
+                        disabled={updatingProfile}
+                        className="text-gray-500 hover:underline text-sm cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setTempName(name);
+                        setIsEditingName(true);
+                      }}
+                      className="text-blue-600 hover:underline text-sm cursor-pointer"
+                    >
+                      Edit
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex gap-4">
-                  <input type="text" value={name} className="border p-3 w-1/2 rounded-lg bg-gray-50" readOnly />
-                  <input type="text" value={name} className="border p-3 w-1/2 rounded-lg bg-gray-50" readOnly />
+                  {isEditingName ? (
+                    <input
+                      type="text"
+                      value={tempName}
+                      onChange={(e) => setTempName(e.target.value)}
+                      className="border p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      disabled={updatingProfile}
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      value={name}
+                      className="border p-3 w-full rounded-lg bg-gray-50 text-gray-800"
+                      readOnly
+                    />
+                  )}
                 </div>
 
                 <div className="mt-5">

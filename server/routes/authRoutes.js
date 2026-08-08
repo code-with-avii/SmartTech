@@ -8,8 +8,9 @@ import {
   addAddress,
   updateAddress,
   deleteAddress,
+  UpdateProfile,
 } from "../controllers/controllers-users.js";
-import verifyAccessToken from "../middleware/authmiddleware.js";
+import verifyAccessToken, { isAdmin } from "../middleware/authmiddleware.js";
 import passport from "passport";
 import { googleAssignToken } from "../controllers/googleControlller.js";
 import { updateOrderStatus } from "../controllers/orderController.js";
@@ -17,11 +18,12 @@ import { updateOrderStatus } from "../controllers/orderController.js";
 const authrouter = express.Router();
 
 //api/auth
-authrouter.put("/admin/orders/:id/status", verifyAccessToken,updateOrderStatus)
+authrouter.put("/admin/orders/:id/status", verifyAccessToken, isAdmin, updateOrderStatus);
 authrouter.post("/signup", Signup);
 authrouter.post("/login", Login);
 authrouter.post("/logout", verifyAccessToken, LogoutUser);
 authrouter.post("/refresh", RefreshUser);
+authrouter.put("/profile", verifyAccessToken, UpdateProfile);
 
 // Addresses routes
 authrouter.get("/addresses", verifyAccessToken, getUserAddresses);

@@ -64,26 +64,30 @@ export const trackOrder = async (req, res) => {
   }
 };
 
-export const updateOrderStatus = async (req,res) =>{
-  const { status } = req.body;
-  const order = await Order.findById(req.params.id);
+export const updateOrderStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const order = await Order.findById(req.params.id);
 
-  if (!order) {
-        return res.status(404).json({
-            message: "Order not found"
-        });
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found",
+      });
     }
 
     order.status = status;
 
     if (status === "Delivered") {
-        order.deliveredAt = new Date();
+      order.deliveredAt = new Date();
     }
 
     await order.save();
 
-    res.json(order);
-  
+    return res.json(order);
+  } catch (error) {
+    console.error("Update order status error:", error);
+    return res.status(500).json({ message: "Unable to update order status" });
+  }
 };
 
 export const getAllOrders = async (req, res) => {
