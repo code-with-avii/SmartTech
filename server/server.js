@@ -52,8 +52,25 @@ app.post(
 app.use(express.json());
 app.use(cookieParser());
 
+import mongoose from "mongoose";
+
 app.get("/", (req, res) => {
   res.send("E-commerce server running");
+});
+
+// Health check / Keep-alive endpoint
+app.get("/api/ping", async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      // Send a lightweight ping to MongoDB to keep the connection pool warm
+      await mongoose.connection.db.admin().ping();
+      res.status(200).json({ status: "ok", message: "Server and Database are awake" });
+    } else {
+      res.status(503).json({ status: "error", message: "Database not connected" });
+    }
+  } catch (err) {
+    res.status(500).json({ status: "error", message: err.message });
+  }
 });
 
 app.get("/products", productsLimiter, async (req, res) => {
