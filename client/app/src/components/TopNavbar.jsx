@@ -1,6 +1,9 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const TopNavbar = () => {
+    const location = useLocation();
+    if (location.pathname === '/login') return null;
+
     return (
     <nav className="bg-black flex flex-col md:flex-row items-center w-full px-3 py-2 ">
         <div className="flex items-center gap-2 justify-center md:justify-start">

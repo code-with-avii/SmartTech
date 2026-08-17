@@ -407,33 +407,102 @@ export const deleteAddress = async (req, res) => {
 
 export const UpdateProfile = async (req, res) => {
   try {
-    const { name } = req.body;
-    if (!name || !name.trim()) {
-      return res.status(400).json({ message: "Name is required" });
-    }
-    if (name.trim().length > 50) {
-      return res.status(400).json({ message: "Name is too long (max 50 characters)" });
-    }
-
     const user = await User.findById(req.user.userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    user.name = name.trim();
+    if (req.body.name !== undefined) {
+      const name = req.body.name;
+      if (!name || !name.trim()) {
+        return res.status(400).json({ message: "Name is required" });
+      }
+      if (name.trim().length > 50) {
+        return res.status(400).json({ message: "Name is too long (max 50 characters)" });
+      }
+      user.name = name.trim();
+    }
+
+    if (req.body.gender !== undefined) {
+      user.gender = req.body.gender;
+    }
+
+    if (req.body.phone !== undefined) {
+      const phone = req.body.phone;
+      if (phone) {
+        const phoneRegex = /^\+?[\d\s-]{10,15}$/;
+        if (!phoneRegex.test(phone)) {
+          return res.status(400).json({ message: "Invalid phone number format" });
+        }
+      }
+      user.phone = phone;
+    }
+
+    if (req.body.address !== undefined) {
+      user.address = req.body.address;
+    }
+
+    if (req.body.city !== undefined) {
+      user.city = req.body.city;
+    }
+
+    if (req.body.state !== undefined) {
+      user.state = req.body.state;
+    }
+
+    if (req.body.pincode !== undefined) {
+      const pincode = req.body.pincode;
+      if (pincode) {
+        const pincodeRegex = /^\d{5,6}$/;
+        if (!pincodeRegex.test(pincode)) {
+          return res.status(400).json({ message: "Invalid pincode format" });
+        }
+      }
+      user.pincode = pincode;
+    }
+
+    if (req.body.profilePic !== undefined) {
+      user.profilePic = req.body.profilePic;
+    }
+
     await user.save();
 
     return res.json({
+      success: true,
       message: "Profile updated successfully",
       user: {
+        _id: user._id,
         email: user.email,
         name: user.name,
         role: user.role,
-        isVerified: user.isVerified
+        isVerified: user.isVerified,
+        gender: user.gender || "",
+        phone: user.phone || "",
+        address: user.address || "",
+        city: user.city || "",
+        state: user.state || "",
+        pincode: user.pincode || "",
+        profilePic: user.profilePic || ""
       }
     });
   } catch (error) {
     console.error("Update profile error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const GetMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select("-password -refreshToken -verificationToken -resetpasswordToken");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    return res.json({
+      success: true,
+      user
+    });
+  } catch (error) {
+    console.error("GetMe error:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };

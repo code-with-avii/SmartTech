@@ -9,6 +9,7 @@ import {
   updateAddress,
   deleteAddress,
   UpdateProfile,
+  GetMe,
 } from "../controllers/controllers-users.js";
 import verifyAccessToken, { isAdmin } from "../middleware/authmiddleware.js";
 import passport from "passport";
@@ -24,6 +25,7 @@ authrouter.post("/login", Login);
 authrouter.post("/logout", verifyAccessToken, LogoutUser);
 authrouter.post("/refresh", RefreshUser);
 authrouter.put("/profile", verifyAccessToken, UpdateProfile);
+authrouter.get("/me", verifyAccessToken, GetMe);
 
 // Addresses routes
 authrouter.get("/addresses", verifyAccessToken, getUserAddresses);

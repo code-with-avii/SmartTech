@@ -27,24 +27,116 @@ const Profile = () => {
   const [addrForm, setAddrForm] = useState(EMPTY_ADDR);
   const [savingAddr, setSavingAddr] = useState(false);
 
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [tempName, setTempName] = useState(name || "");
-  const [updatingProfile, setUpdatingProfile] = useState(false);
+  // Profile Edit State
+  const [dbUser, setDbUser] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [errorProfile, setErrorProfile] = useState(null);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    name: "",
+    gender: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    pincode: "",
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
 
-  const handleSaveName = async () => {
-    if (!tempName || !tempName.trim()) {
-      showToast("Name cannot be empty", "error");
-      return;
-    }
-    if (tempName.trim().length > 50) {
-      showToast("Name is too long", "error");
-      return;
-    }
-    setUpdatingProfile(true);
+  const fetchProfile = async () => {
+    setLoadingProfile(true);
+    setErrorProfile(null);
     try {
-      const res = await api.put("/api/auth/profile", { name: tempName });
+      const res = await api.get("/api/auth/me");
+      const user = res.data.user;
+      setDbUser(user);
+      setProfileForm({
+        name: user.name || "",
+        gender: user.gender || "",
+        phone: user.phone || "",
+        address: user.address || "",
+        city: user.city || "",
+        state: user.state || "",
+        pincode: user.pincode || "",
+      });
+
+      // Synchronize client Redux state and localStorage in case they are outdated
+      if (user.name !== name) {
+        dispatch(updatedProfile({ name: user.name }));
+        const localUserStr = localStorage.getItem("user");
+        if (localUserStr) {
+          const localUser = JSON.parse(localUserStr);
+          localUser.name = user.name;
+          localStorage.setItem("user", JSON.stringify(localUser));
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+      setErrorProfile(err.response?.data?.message || "Failed to load profile details.");
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const handleProfileFormChange = (e) => {
+    setProfileForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleGenderChange = (genderVal) => {
+    setProfileForm((prev) => ({ ...prev, gender: genderVal }));
+  };
+
+  const validateForm = () => {
+    if (!profileForm.name || !profileForm.name.trim()) {
+      showToast("Name cannot be empty", "error");
+      return false;
+    }
+    if (profileForm.name.trim().length > 50) {
+      showToast("Name is too long (max 50 characters)", "error");
+      return false;
+    }
+    if (profileForm.phone) {
+      const phoneRegex = /^\+?[\d\s-]{10,15}$/;
+      if (!phoneRegex.test(profileForm.phone)) {
+        showToast("Please enter a valid phone number (10-15 digits)", "error");
+        return false;
+      }
+    }
+    if (profileForm.pincode) {
+      const pinRegex = /^\d{5,6}$/;
+      if (!pinRegex.test(profileForm.pincode)) {
+        showToast("Please enter a valid pincode (5 or 6 digits)", "error");
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleSaveChanges = async () => {
+    if (!validateForm()) return;
+    setSavingProfile(true);
+    try {
+      const res = await api.put("/api/auth/profile", {
+        name: profileForm.name.trim(),
+        gender: profileForm.gender,
+        phone: profileForm.phone.trim(),
+        address: profileForm.address.trim(),
+        city: profileForm.city.trim(),
+        state: profileForm.state.trim(),
+        pincode: profileForm.pincode.trim(),
+      });
+
       const updatedUser = res.data.user;
-      
+      setDbUser(updatedUser);
+
+      // Sync Redux
+      dispatch(updatedProfile({ name: updatedUser.name }));
+
+      // Sync localStorage
       const localUserStr = localStorage.getItem("user");
       if (localUserStr) {
         const localUser = JSON.parse(localUserStr);
@@ -54,14 +146,28 @@ const Profile = () => {
         localStorage.setItem("user", JSON.stringify(updatedUser));
       }
 
-      dispatch(updatedProfile({ name: updatedUser.name }));
       showToast("Profile updated successfully");
-      setIsEditingName(false);
+      setIsEditingProfile(false);
     } catch (err) {
       showToast(err.response?.data?.message || "Failed to update profile", "error");
     } finally {
-      setUpdatingProfile(false);
+      setSavingProfile(false);
     }
+  };
+
+  const handleCancelEdit = () => {
+    if (dbUser) {
+      setProfileForm({
+        name: dbUser.name || "",
+        gender: dbUser.gender || "",
+        phone: dbUser.phone || "",
+        address: dbUser.address || "",
+        city: dbUser.city || "",
+        state: dbUser.state || "",
+        pincode: dbUser.pincode || "",
+      });
+    }
+    setIsEditingProfile(false);
   };
 
   const fetchAddresses = async () => {
@@ -228,106 +334,202 @@ const Profile = () => {
 
           {/* ─── PROFILE TAB ─── */}
           {activeTab === 'profile' && (
-            <>
-              {/* Personal Info */}
-              <div className="bg-white rounded-2xl shadow-sm p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-semibold text-gray-800">Personal Information</h2>
-                  {isEditingName ? (
+            loadingProfile ? (
+              <div className="bg-white rounded-2xl shadow-sm p-12 text-center text-gray-500 font-medium">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                Loading profile details...
+              </div>
+            ) : errorProfile ? (
+              <div className="bg-white rounded-2xl shadow-sm p-12 text-center text-red-500 font-medium">
+                <p className="mb-4">{errorProfile}</p>
+                <button
+                  onClick={fetchProfile}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Profile Header */}
+                <div className="flex justify-between items-center bg-white rounded-2xl shadow-sm p-6">
+                  <div>
+                    <h1 className="text-xl font-bold text-gray-800 font-sans">Profile Details</h1>
+                    <p className="text-sm text-gray-500">Manage your profile details and primary contact information.</p>
+                  </div>
+                  {!isEditingProfile ? (
+                    <button
+                      onClick={() => setIsEditingProfile(true)}
+                      className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition cursor-pointer shadow"
+                    >
+                      <FaEdit /> Edit Profile
+                    </button>
+                  ) : (
                     <div className="flex gap-2">
                       <button
-                        onClick={handleSaveName}
-                        disabled={updatingProfile}
-                        className="text-green-600 hover:underline text-sm font-semibold disabled:opacity-60 cursor-pointer"
+                        onClick={handleSaveChanges}
+                        disabled={savingProfile}
+                        className="px-5 py-2 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 transition disabled:opacity-60 cursor-pointer shadow"
                       >
-                        {updatingProfile ? "Saving..." : "Save"}
+                        {savingProfile ? "Saving..." : "Save Changes"}
                       </button>
                       <button
-                        onClick={() => {
-                          setTempName(name);
-                          setIsEditingName(false);
-                        }}
-                        disabled={updatingProfile}
-                        className="text-gray-500 hover:underline text-sm cursor-pointer"
+                        onClick={handleCancelEdit}
+                        disabled={savingProfile}
+                        className="px-5 py-2 border border-gray-300 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 transition cursor-pointer"
                       >
                         Cancel
                       </button>
                     </div>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setTempName(name);
-                        setIsEditingName(true);
-                      }}
-                      className="text-blue-600 hover:underline text-sm cursor-pointer"
-                    >
-                      Edit
-                    </button>
                   )}
                 </div>
 
-                <div className="flex gap-4">
-                  {isEditingName ? (
-                    <input
-                      type="text"
-                      value={tempName}
-                      onChange={(e) => setTempName(e.target.value)}
-                      className="border p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                      disabled={updatingProfile}
-                    />
-                  ) : (
-                    <input
-                      type="text"
-                      value={name}
-                      className="border p-3 w-full rounded-lg bg-gray-50 text-gray-800"
-                      readOnly
-                    />
-                  )}
-                </div>
-
-                <div className="mt-5">
-                  <p className="mb-2 text-gray-600">Your Gender</p>
-                  <div className="flex gap-6">
-                    <label className="flex items-center gap-2"><input type="radio" name="gender" /> Male</label>
-                    <label className="flex items-center gap-2"><input type="radio" name="gender" /> Female</label>
+                {/* Personal Info */}
+                <div className="bg-white rounded-2xl shadow-sm p-6">
+                  <h2 className="text-lg font-semibold text-gray-800 mb-4">Personal Information</h2>
+                  <div className="flex flex-col gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-600 mb-1">Full Name</label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={isEditingProfile ? profileForm.name : (dbUser?.name || "")}
+                        onChange={handleProfileFormChange}
+                        className={`border p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 ${isEditingProfile ? "bg-white" : "bg-gray-55 bg-gray-50 text-gray-800"}`}
+                        readOnly={!isEditingProfile}
+                      />
+                    </div>
+                    <div>
+                      <p className="mb-2 text-sm font-semibold text-gray-600">Your Gender</p>
+                      <div className="flex gap-6">
+                        <label className="flex items-center gap-2 cursor-pointer text-gray-700">
+                          <input
+                            type="radio"
+                            name="gender"
+                            value="Male"
+                            checked={isEditingProfile ? profileForm.gender === "Male" : dbUser?.gender === "Male"}
+                            disabled={!isEditingProfile}
+                            onChange={() => handleGenderChange("Male")}
+                          />
+                          Male
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer text-gray-700">
+                          <input
+                            type="radio"
+                            name="gender"
+                            value="Female"
+                            checked={isEditingProfile ? profileForm.gender === "Female" : dbUser?.gender === "Female"}
+                            disabled={!isEditingProfile}
+                            onChange={() => handleGenderChange("Female")}
+                          />
+                          Female
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Email */}
-              <div className="bg-white rounded-2xl shadow-sm p-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-semibold text-gray-800">Email Address</h2>
-                  <button className="text-blue-600 text-sm hover:underline">Edit</button>
-                </div>
-                <input type="text" value={email} className="border p-3 w-1/2 mt-4 rounded-lg bg-gray-50" readOnly />
-                <div className="mt-3"><VerificationStatus isVerified={isVerified} email={email} /></div>
-              </div>
-
-              {/* Mobile */}
-              <div className="bg-white rounded-2xl shadow-sm p-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-semibold text-gray-800">Mobile Number</h2>
-                  <button className="text-blue-600 text-sm hover:underline">Edit</button>
-                </div>
-                <input type="text" placeholder="Enter your number" className="border p-3 w-1/2 mt-4 rounded-lg bg-gray-50" readOnly />
-              </div>
-
-              {/* FAQs */}
-              <div className="bg-white rounded-2xl shadow-sm p-6">
-                <h2 className="text-lg font-semibold mb-4 text-gray-800">FAQs</h2>
-                <div className="space-y-4 text-sm">
-                  <div>
-                    <p className="font-medium">What happens when I update my email address?</p>
-                    <p className="text-gray-600 mt-1">Your login email changes and all communication goes to the new one.</p>
-                  </div>
-                  <div>
-                    <p className="font-medium">When will my account be updated?</p>
-                    <p className="text-gray-600 mt-1">It updates immediately after OTP confirmation.</p>
+                {/* Email */}
+                <div className="bg-white rounded-2xl shadow-sm p-6">
+                  <h2 className="text-lg font-semibold text-gray-800 mb-4">Email Address</h2>
+                  <input
+                    type="text"
+                    value={email}
+                    className="border p-3 w-full rounded-lg bg-gray-50 text-gray-800"
+                    readOnly
+                  />
+                  <div className="mt-3">
+                    <VerificationStatus isVerified={isVerified} email={email} />
                   </div>
                 </div>
-              </div>
-            </>
+
+                {/* Mobile */}
+                <div className="bg-white rounded-2xl shadow-sm p-6">
+                  <h2 className="text-lg font-semibold text-gray-800 mb-4">Mobile Number</h2>
+                  <input
+                    type="text"
+                    name="phone"
+                    value={isEditingProfile ? profileForm.phone : (dbUser?.phone || "")}
+                    onChange={handleProfileFormChange}
+                    placeholder={isEditingProfile ? "Enter your phone number" : "No phone number set"}
+                    className={`border p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 ${isEditingProfile ? "bg-white" : "bg-gray-50 text-gray-800"}`}
+                    readOnly={!isEditingProfile}
+                  />
+                </div>
+
+                {/* Address Details */}
+                <div className="bg-white rounded-2xl shadow-sm p-6">
+                  <h2 className="text-lg font-semibold text-gray-800 mb-4">Address Details</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-600 mb-1">Street Address</label>
+                      <input
+                        type="text"
+                        name="address"
+                        value={isEditingProfile ? profileForm.address : (dbUser?.address || "")}
+                        onChange={handleProfileFormChange}
+                        placeholder={isEditingProfile ? "Enter your street address" : "No address set yet"}
+                        className={`border p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 ${isEditingProfile ? "bg-white" : "bg-gray-50 text-gray-800"}`}
+                        readOnly={!isEditingProfile}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-600 mb-1">City</label>
+                        <input
+                          type="text"
+                          name="city"
+                          value={isEditingProfile ? profileForm.city : (dbUser?.city || "")}
+                          onChange={handleProfileFormChange}
+                          placeholder={isEditingProfile ? "City" : "Not set"}
+                          className={`border p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 ${isEditingProfile ? "bg-white" : "bg-gray-50 text-gray-800"}`}
+                          readOnly={!isEditingProfile}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-600 mb-1">State</label>
+                        <input
+                          type="text"
+                          name="state"
+                          value={isEditingProfile ? profileForm.state : (dbUser?.state || "")}
+                          onChange={handleProfileFormChange}
+                          placeholder={isEditingProfile ? "State" : "Not set"}
+                          className={`border p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 ${isEditingProfile ? "bg-white" : "bg-gray-50 text-gray-800"}`}
+                          readOnly={!isEditingProfile}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-600 mb-1">Pincode</label>
+                        <input
+                          type="text"
+                          name="pincode"
+                          value={isEditingProfile ? profileForm.pincode : (dbUser?.pincode || "")}
+                          onChange={handleProfileFormChange}
+                          placeholder={isEditingProfile ? "Pincode" : "Not set"}
+                          className={`border p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 ${isEditingProfile ? "bg-white" : "bg-gray-50 text-gray-800"}`}
+                          readOnly={!isEditingProfile}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* FAQs */}
+                <div className="bg-white rounded-2xl shadow-sm p-6">
+                  <h2 className="text-lg font-semibold mb-4 text-gray-800">FAQs</h2>
+                  <div className="space-y-4 text-sm">
+                    <div>
+                      <p className="font-medium">What happens when I update my profile details?</p>
+                      <p className="text-gray-600 mt-1">Your profile details are updated instantly in our systems and will be used for your next checkouts.</p>
+                    </div>
+                    <div>
+                      <p className="font-medium">Is my personal information secure?</p>
+                      <p className="text-gray-600 mt-1">Yes, all updates are securely authenticated and transmitted over SSL with token validation.</p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )
           )}
 
           {/* ─── ADDRESSES TAB ─── */}

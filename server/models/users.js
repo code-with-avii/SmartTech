@@ -28,6 +28,44 @@ const userSchema = new mongoose.Schema({
     resetpasswordToken:String,
     resetpasswordExpires:Date,
     profilePic: String,
+    gender: {
+        type: String,
+        default: ""
+    },
+    phone: {
+        type: String,
+        default: "",
+        validate: {
+            validator: function(v) {
+                if (!v) return true;
+                return /^\+?[\d\s-]{10,15}$/.test(v);
+            },
+            message: props => `${props.value} is not a valid phone number!`
+        }
+    },
+    address: {
+        type: String,
+        default: ""
+    },
+    city: {
+        type: String,
+        default: ""
+    },
+    state: {
+        type: String,
+        default: ""
+    },
+    pincode: {
+        type: String,
+        default: "",
+        validate: {
+            validator: function(v) {
+                if (!v) return true;
+                return /^\d{5,6}$/.test(v);
+            },
+            message: props => `${props.value} is not a valid pincode!`
+        }
+    },
     role: {
         type: String,
         enum: ['user', 'admin'],
